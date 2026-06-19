@@ -1,0 +1,276 @@
+<div class="clients">
+  <div class="clients__header">
+    <h1>Dossiers / Clients</h1>
+    <button class="clients__btn-create" (click)="openCreateModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      Creer un nouveau dossier
+    </button>
+  </div>
+
+  @if (isLoading) {
+    <div class="clients__loading">
+      <div class="clients__spinner"></div>
+      <span>Chargement des dossiers...</span>
+    </div>
+  } @else if (clients.length === 0) {
+    <div class="clients__empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      </svg>
+      <h3>Aucun dossier</h3>
+      <p>Creez votre premier dossier client pour commencer.</p>
+    </div>
+  } @else {
+    <div class="clients__table-wrapper">
+      <table class="clients__table">
+        <thead>
+          <tr>
+            <th>Raison sociale</th>
+            <th>SIREN</th>
+            <th>Regime fiscal</th>
+            <th>Date de creation</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (client of clients; track client.id) {
+            <tr (click)="openViewModal(client)">
+              <td class="clients__cell-main">{{ client.raisonSociale }}</td>
+              <td>{{ client.siren }}</td>
+              <td>{{ client.regimeFiscal }}</td>
+              <td>{{ formatDate(client.createdAt) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Modal Creation -->
+@if (showCreateModal) {
+  <div class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2>Creer un nouveau dossier</h2>
+        <button class="modal__close" (click)="closeCreateModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      @if (createError) {
+        <div class="modal__error">{{ createError }}</div>
+      }
+
+      <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="modal__form">
+        <div class="modal__field">
+          <label>Raison sociale *</label>
+          <input type="text" formControlName="raisonSociale" placeholder="Nom de la societe" />
+        </div>
+
+        <div class="modal__field">
+          <label>SIREN *</label>
+          <input
+            type="text"
+            formControlName="siren"
+            placeholder="123456789"
+            maxlength="9"
+            (input)="onSirenInput($event, createForm)"
+          />
+          @if (createForm.get('siren')?.invalid && createForm.get('siren')?.touched) {
+            <span class="modal__field-error">SIREN invalide</span>
+          }
+        </div>
+
+        <div class="modal__row">
+          <div class="modal__field">
+            <label>Regime fiscal *</label>
+            <select formControlName="regimeFiscal">
+              <option value="">Selectionnez...</option>
+              @for (regime of regimesFiscaux; track regime.value) {
+                <option [value]="regime.value">{{ regime.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="modal__field">
+            <label>Regime TVA *</label>
+            <select formControlName="regimeTVA">
+              <option value="">Selectionnez...</option>
+              @for (regime of regimesTVA; track regime.value) {
+                <option [value]="regime.value">{{ regime.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="modal__row">
+          <div class="modal__field">
+            <label>Date debut exercice *</label>
+            <input type="date" formControlName="dateDebutExercice" />
+          </div>
+
+          <div class="modal__field">
+            <label>Date fin exercice *</label>
+            <input type="date" formControlName="dateFinExercice" />
+          </div>
+        </div>
+
+        @if (!isExerciceValid(createForm)) {
+          <div class="modal__error">L'exercice ne doit pas depasser 24 mois et la date de fin doit etre posterieure a la date de debut.</div>
+        }
+
+        <div class="modal__actions">
+          <button type="button" class="modal__btn-cancel" (click)="closeCreateModal()">Annuler</button>
+          <button type="submit" class="modal__btn-submit" [disabled]="!isCreateFormValid() || isCreating">
+            @if (isCreating) {
+              <span class="modal__spinner"></span>
+              Creation...
+            } @else {
+              Enregistrer
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal View/Edit -->
+@if (showViewModal && selectedClient) {
+  <div class="modal-overlay" (click)="closeViewModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2>{{ isEditMode ? 'Modifier le dossier' : 'Details du dossier' }}</h2>
+        <button class="modal__close" (click)="closeViewModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      @if (updateSuccess) {
+        <div class="modal__success">Le dossier a ete mis a jour</div>
+      }
+
+      @if (updateError) {
+        <div class="modal__error">{{ updateError }}</div>
+      }
+
+      <form [formGroup]="editForm" (ngSubmit)="submitUpdate()" class="modal__form">
+        <div class="modal__field">
+          <label>Raison sociale</label>
+          @if (isEditMode) {
+            <input type="text" formControlName="raisonSociale" (input)="onFieldChange()" />
+          } @else {
+            <div class="modal__value">{{ selectedClient.raisonSociale }}</div>
+          }
+        </div>
+
+        <div class="modal__field">
+          <label>SIREN</label>
+          @if (isEditMode) {
+            <input
+              type="text"
+              formControlName="siren"
+              maxlength="9"
+              (input)="onSirenInput($event, editForm); onFieldChange()"
+            />
+            @if (editForm.get('siren')?.invalid && editForm.get('siren')?.touched) {
+              <span class="modal__field-error">SIREN invalide</span>
+            }
+          } @else {
+            <div class="modal__value">{{ selectedClient.siren }}</div>
+          }
+        </div>
+
+        <div class="modal__row">
+          <div class="modal__field">
+            <label>Regime fiscal</label>
+            @if (isEditMode) {
+              <select formControlName="regimeFiscal" (change)="onFieldChange()">
+                @for (regime of regimesFiscaux; track regime.value) {
+                  <option [value]="regime.value">{{ regime.label }}</option>
+                }
+              </select>
+            } @else {
+              <div class="modal__value">{{ getRegimeFiscalLabel(selectedClient.regimeFiscal) }}</div>
+            }
+          </div>
+
+          <div class="modal__field">
+            <label>Regime TVA</label>
+            @if (isEditMode) {
+              <select formControlName="regimeTVA" (change)="onFieldChange()">
+                @for (regime of regimesTVA; track regime.value) {
+                  <option [value]="regime.value">{{ regime.label }}</option>
+                }
+              </select>
+            } @else {
+              <div class="modal__value">{{ getRegimeTVALabel(selectedClient.regimeTVA) }}</div>
+            }
+          </div>
+        </div>
+
+        <div class="modal__row">
+          <div class="modal__field">
+            <label>Date debut exercice</label>
+            @if (isEditMode) {
+              <input type="date" formControlName="dateDebutExercice" (change)="onFieldChange()" />
+            } @else {
+              <div class="modal__value">{{ formatDate(selectedClient.dateDebutExercice) }}</div>
+            }
+          </div>
+
+          <div class="modal__field">
+            <label>Date fin exercice</label>
+            @if (isEditMode) {
+              <input type="date" formControlName="dateFinExercice" (change)="onFieldChange()" />
+            } @else {
+              <div class="modal__value">{{ formatDate(selectedClient.dateFinExercice) }}</div>
+            }
+          </div>
+        </div>
+
+        @if (isEditMode && !isExerciceValid(editForm)) {
+          <div class="modal__error">L'exercice ne doit pas depasser 24 mois et la date de fin doit etre posterieure a la date de debut.</div>
+        }
+
+        <div class="modal__actions">
+          <button type="button" class="modal__btn-cancel" (click)="closeViewModal()">Quitter</button>
+          @if (isEditMode) {
+            <button type="submit" class="modal__btn-submit" [disabled]="!isEditFormValid() || isUpdating">
+              @if (isUpdating) {
+                <span class="modal__spinner"></span>
+                Sauvegarde...
+              } @else {
+                Sauvegarder
+              }
+            </button>
+          } @else {
+            <button type="button" class="modal__btn-submit" (click)="enableEditMode()">Modifier</button>
+          }
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Confirm Close Dialog -->
+@if (showConfirmClose) {
+  <div class="modal-overlay" (click)="cancelClose()">
+    <div class="modal modal--small" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2>Confirmer</h2>
+      </div>
+      <p class="modal__message">Les modifications non sauvegardees seront perdues. Confirmer ?</p>
+      <div class="modal__actions">
+        <button type="button" class="modal__btn-cancel" (click)="cancelClose()">Annuler</button>
+        <button type="button" class="modal__btn-danger" (click)="confirmClose()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+}
