@@ -5,6 +5,12 @@ spring:
   application:
     name: compta-pro
 
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 300MB
+      max-request-size: 300MB
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:72.60.188.97}:${DB_PORT:5432}/${DB_NAME:compta}
     username: ${DB_USERNAME:formation}

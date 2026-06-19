@@ -1,0 +1,25 @@
+<div class="cabinet-layout">
+  <header class="cabinet-layout__header">
+    <a routerLink="/cabinet/dashboard" class="cabinet-layout__logo">
+      <div class="cabinet-layout__logo-icon">CP</div>
+      <span class="cabinet-layout__logo-text">Compta Pro</span>
+    </a>
+
+    <div class="cabinet-layout__header-right">
+      <span class="cabinet-layout__cabinet-name">{{ cabinetName }}</span>
+      <button class="cabinet-layout__logout" (click)="logout()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+        Deconnexion
+      </button>
+    </div>
+  </header>
+
+  <div class="cabinet-layout__body">
+    <app-sidebar></app-sidebar>
+    <main class="cabinet-layout__content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
