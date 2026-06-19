@@ -1,0 +1,228 @@
+<div class="register">
+  <div class="register__container">
+    <div class="register__header">
+      <div class="register__logo">
+        <span class="register__logo-icon">CP</span>
+        <span class="register__logo-text">Compta Pro</span>
+      </div>
+      <h1 class="register__title">Inscription Expert-Comptable</h1>
+      <p class="register__subtitle">Creez votre compte pour acceder a votre espace professionnel</p>
+    </div>
+
+    @if (successMessage) {
+      <div class="register__success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <p>{{ successMessage }}</p>
+      </div>
+    }
+
+    @if (errorMessage) {
+      <div class="register__error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        <p>{{ errorMessage }}</p>
+      </div>
+    }
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register__form">
+      <!-- Nom du cabinet -->
+      <div class="register__field">
+        <label for="cabinetName" class="register__label">Nom du cabinet *</label>
+        <input
+          type="text"
+          id="cabinetName"
+          formControlName="cabinetName"
+          class="register__input"
+          [class.register__input--error]="isFieldInvalid('cabinetName')"
+          placeholder="Cabinet Exemple & Associes"
+        />
+        @if (getErrorMessage('cabinetName')) {
+          <span class="register__field-error">{{ getErrorMessage('cabinetName') }}</span>
+        }
+      </div>
+
+      <!-- Adresse -->
+      <div class="register__field">
+        <label for="address" class="register__label">Adresse *</label>
+        <input
+          type="text"
+          id="address"
+          formControlName="address"
+          class="register__input"
+          [class.register__input--error]="isFieldInvalid('address')"
+          placeholder="123 Rue de la Comptabilite, 75001 Paris"
+        />
+        @if (getErrorMessage('address')) {
+          <span class="register__field-error">{{ getErrorMessage('address') }}</span>
+        }
+      </div>
+
+      <!-- SIREN et Numero d'immatriculation -->
+      <div class="register__row">
+        <div class="register__field">
+          <label for="siren" class="register__label">SIREN *</label>
+          <input
+            type="text"
+            id="siren"
+            formControlName="siren"
+            class="register__input"
+            [class.register__input--error]="isFieldInvalid('siren')"
+            placeholder="123456789"
+            (input)="onSirenInput($event)"
+            maxlength="9"
+          />
+          @if (getErrorMessage('siren')) {
+            <span class="register__field-error">{{ getErrorMessage('siren') }}</span>
+          }
+        </div>
+
+        <div class="register__field">
+          <label for="registrationNumber" class="register__label">Numero d'immatriculation *</label>
+          <input
+            type="text"
+            id="registrationNumber"
+            formControlName="registrationNumber"
+            class="register__input"
+            [class.register__input--error]="isFieldInvalid('registrationNumber')"
+            placeholder="OEC-XXXXX"
+          />
+          @if (getErrorMessage('registrationNumber')) {
+            <span class="register__field-error">{{ getErrorMessage('registrationNumber') }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Email et Telephone -->
+      <div class="register__row">
+        <div class="register__field">
+          <label for="email" class="register__label">Adresse email *</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="register__input"
+            [class.register__input--error]="isFieldInvalid('email')"
+            placeholder="contact@cabinet.fr"
+          />
+          @if (getErrorMessage('email')) {
+            <span class="register__field-error">{{ getErrorMessage('email') }}</span>
+          }
+        </div>
+
+        <div class="register__field">
+          <label for="phone" class="register__label">Numero de telephone *</label>
+          <input
+            type="tel"
+            id="phone"
+            formControlName="phone"
+            class="register__input"
+            [class.register__input--error]="isFieldInvalid('phone')"
+            placeholder="0123456789"
+            (input)="onPhoneInput($event)"
+            maxlength="10"
+          />
+          @if (getErrorMessage('phone')) {
+            <span class="register__field-error">{{ getErrorMessage('phone') }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Mot de passe -->
+      <div class="register__field">
+        <label for="password" class="register__label">Mot de passe *</label>
+        <div class="register__password-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            class="register__input"
+            [class.register__input--error]="isFieldInvalid('password')"
+            placeholder="Votre mot de passe"
+          />
+          <button type="button" class="register__password-toggle" (click)="togglePasswordVisibility()">
+            @if (showPassword) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            }
+          </button>
+        </div>
+        <div class="register__password-criteria">
+          <span [class.register__criteria--valid]="passwordCriteria.minLength">
+            @if (passwordCriteria.minLength) { &#10003; } @else { &#10007; } 8 caracteres minimum
+          </span>
+          <span [class.register__criteria--valid]="passwordCriteria.hasUppercase">
+            @if (passwordCriteria.hasUppercase) { &#10003; } @else { &#10007; } 1 majuscule
+          </span>
+          <span [class.register__criteria--valid]="passwordCriteria.hasNumber">
+            @if (passwordCriteria.hasNumber) { &#10003; } @else { &#10007; } 1 chiffre
+          </span>
+          <span [class.register__criteria--valid]="passwordCriteria.hasSpecial">
+            @if (passwordCriteria.hasSpecial) { &#10003; } @else { &#10007; } 1 caractere special
+          </span>
+        </div>
+      </div>
+
+      <!-- Confirmation mot de passe -->
+      <div class="register__field">
+        <label for="confirmPassword" class="register__label">Confirmation du mot de passe *</label>
+        <div class="register__password-wrapper">
+          <input
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            class="register__input"
+            [class.register__input--error]="isFieldInvalid('confirmPassword')"
+            placeholder="Confirmez votre mot de passe"
+          />
+          <button type="button" class="register__password-toggle" (click)="toggleConfirmPasswordVisibility()">
+            @if (showConfirmPassword) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            }
+          </button>
+        </div>
+        @if (getErrorMessage('confirmPassword')) {
+          <span class="register__field-error">{{ getErrorMessage('confirmPassword') }}</span>
+        }
+      </div>
+
+      <!-- Submit button -->
+      <button
+        type="submit"
+        class="register__submit"
+        [disabled]="registerForm.invalid || isSubmitting"
+      >
+        @if (isSubmitting) {
+          <span class="register__spinner"></span>
+          Creation en cours...
+        } @else {
+          Creer mon compte
+        }
+      </button>
+
+      <p class="register__login">
+        Deja inscrit ? <a routerLink="/login">Se connecter</a>
+      </p>
+    </form>
+  </div>
+</div>

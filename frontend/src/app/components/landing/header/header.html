@@ -13,7 +13,7 @@
 
     <div class="header__actions">
       <button class="header__btn header__btn--outline">Se connecter</button>
-      <button class="header__btn header__btn--primary">Essai gratuit</button>
+      <a routerLink="/register" class="header__btn header__btn--primary">Creer un compte</a>
     </div>
 
     <button class="header__mobile-toggle" (click)="toggleMobileMenu()">
@@ -29,7 +29,7 @@
       <a href="#pricing" class="header__nav-link" (click)="closeMobileMenu()">Tarifs</a>
       <a href="#contact" class="header__nav-link" (click)="closeMobileMenu()">Contact</a>
       <button class="header__btn header__btn--outline">Se connecter</button>
-      <button class="header__btn header__btn--primary">Essai gratuit</button>
+      <a routerLink="/register" class="header__btn header__btn--primary" (click)="closeMobileMenu()">Creer un compte</a>
     </nav>
   </div>
 </header>
