@@ -1,0 +1,35 @@
+<header class="header">
+  <div class="header__container">
+    <div class="header__logo">
+      <span class="header__logo-icon">CP</span>
+      <span class="header__logo-text">Compta Pro</span>
+    </div>
+
+    <nav class="header__nav">
+      <a href="#features" class="header__nav-link">Fonctionnalites</a>
+      <a href="#pricing" class="header__nav-link">Tarifs</a>
+      <a href="#contact" class="header__nav-link">Contact</a>
+    </nav>
+
+    <div class="header__actions">
+      <button class="header__btn header__btn--outline">Se connecter</button>
+      <button class="header__btn header__btn--primary">Essai gratuit</button>
+    </div>
+
+    <button class="header__mobile-toggle" (click)="toggleMobileMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+
+  <div class="header__mobile-menu" [class.header__mobile-menu--open]="mobileMenuOpen">
+    <nav class="header__mobile-nav">
+      <a href="#features" class="header__nav-link" (click)="closeMobileMenu()">Fonctionnalites</a>
+      <a href="#pricing" class="header__nav-link" (click)="closeMobileMenu()">Tarifs</a>
+      <a href="#contact" class="header__nav-link" (click)="closeMobileMenu()">Contact</a>
+      <button class="header__btn header__btn--outline">Se connecter</button>
+      <button class="header__btn header__btn--primary">Essai gratuit</button>
+    </nav>
+  </div>
+</header>

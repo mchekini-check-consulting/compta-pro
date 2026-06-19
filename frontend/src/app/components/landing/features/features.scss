@@ -1,0 +1,131 @@
+.features {
+  padding: 6rem 2rem;
+  background: #ffffff;
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(0, 102, 255, 0.1), rgba(0, 212, 170, 0.1));
+    color: #0066ff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+  }
+
+  &__title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 1rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+
+    @media (max-width: 768px) {
+      font-size: 2rem;
+    }
+  }
+
+  &__subtitle {
+    font-size: 1.15rem;
+    color: #4a4a68;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+
+    @media (max-width: 968px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 580px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__card {
+    background: #f8faff;
+    padding: 2rem;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  &__icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+
+    svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    &--blue {
+      background: rgba(0, 102, 255, 0.1);
+      color: #0066ff;
+    }
+
+    &--green {
+      background: rgba(0, 212, 170, 0.1);
+      color: #00d4aa;
+    }
+
+    &--purple {
+      background: rgba(123, 97, 255, 0.1);
+      color: #7b61ff;
+    }
+
+    &--orange {
+      background: rgba(255, 149, 0, 0.1);
+      color: #ff9500;
+    }
+
+    &--pink {
+      background: rgba(255, 59, 148, 0.1);
+      color: #ff3b94;
+    }
+
+    &--teal {
+      background: rgba(0, 199, 190, 0.1);
+      color: #00c7be;
+    }
+  }
+
+  &__card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 0.75rem;
+  }
+
+  &__card-text {
+    font-size: 1rem;
+    color: #4a4a68;
+    line-height: 1.6;
+  }
+}
