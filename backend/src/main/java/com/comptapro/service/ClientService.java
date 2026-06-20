@@ -1,13 +1,18 @@
 package com.comptapro.service;
 
 import com.comptapro.dto.ClientResponse;
+import com.comptapro.dto.ClientSearchCriteria;
+import com.comptapro.dto.ClientSearchResponse;
 import com.comptapro.dto.CreateClientRequest;
 import com.comptapro.dto.UpdateClientRequest;
 import com.comptapro.model.Accountant;
 import com.comptapro.model.Client;
 import com.comptapro.repository.AccountantRepository;
 import com.comptapro.repository.ClientRepository;
+import com.comptapro.repository.ClientSpecifications;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +48,9 @@ public class ClientService {
         Client client = Client.builder()
             .raisonSociale(request.getRaisonSociale())
             .siren(request.getSiren())
+            .formeJuridique(request.getFormeJuridique())
+            .statut(request.getStatut())
+            .dateImmatriculation(request.getDateImmatriculation())
             .regimeFiscal(request.getRegimeFiscal())
             .regimeTVA(request.getRegimeTVA())
             .dateDebutExercice(request.getDateDebutExercice())
@@ -59,6 +67,45 @@ public class ClientService {
             .stream()
             .map(ClientResponse::fromEntity)
             .toList();
+    }
+
+    /**
+     * Recherche multi-critere des dossiers du comptable connecte. Tous les
+     * criteres sont optionnels et cumulables (RG-006) ; les resultats sont
+     * cloisonnes au cabinet (RG-012) et tries par raison sociale (RG-011).
+     *
+     * @throws IllegalArgumentException si la date de debut est posterieure a la
+     *                                  date de fin (AC-09)
+     */
+    public ClientSearchResponse searchClients(Long accountantId, ClientSearchCriteria criteria) {
+        if (criteria.getDateDebut() != null && criteria.getDateFin() != null
+                && criteria.getDateDebut().isAfter(criteria.getDateFin())) {
+            throw new IllegalArgumentException(
+                "La date de debut doit etre anterieure a la date de fin");
+        }
+
+        Specification<Client> spec = Specification
+            .where(ClientSpecifications.appartientAuComptable(accountantId))
+            .and(ClientSpecifications.raisonSocialeContient(criteria.getRaisonSociale()))
+            .and(ClientSpecifications.sirenCommencePar(criteria.getSiren()))
+            .and(ClientSpecifications.formeJuridiqueEgale(criteria.getFormeJuridique()))
+            .and(ClientSpecifications.statutParmi(criteria.getStatuts()))
+            .and(ClientSpecifications.immatriculeApres(criteria.getDateDebut()))
+            .and(ClientSpecifications.immatriculeAvant(criteria.getDateFin()));
+
+        List<ClientResponse> clients = clientRepository
+            .findAll(spec, Sort.by(Sort.Direction.ASC, "raisonSociale"))
+            .stream()
+            .map(ClientResponse::fromEntity)
+            .toList();
+
+        long total = clientRepository.countByAccountantId(accountantId);
+
+        return ClientSearchResponse.builder()
+            .count(clients.size())
+            .total(total)
+            .clients(clients)
+            .build();
     }
 
     public ClientResponse getClientById(Long accountantId, Long clientId) {
@@ -88,6 +135,9 @@ public class ClientService {
 
         client.setRaisonSociale(request.getRaisonSociale());
         client.setSiren(request.getSiren());
+        client.setFormeJuridique(request.getFormeJuridique());
+        client.setStatut(request.getStatut());
+        client.setDateImmatriculation(request.getDateImmatriculation());
         client.setRegimeFiscal(request.getRegimeFiscal());
         client.setRegimeTVA(request.getRegimeTVA());
         client.setDateDebutExercice(request.getDateDebutExercice());

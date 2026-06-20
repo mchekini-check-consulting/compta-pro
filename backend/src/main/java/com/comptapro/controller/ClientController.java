@@ -1,6 +1,8 @@
 package com.comptapro.controller;
 
 import com.comptapro.dto.ClientResponse;
+import com.comptapro.dto.ClientSearchCriteria;
+import com.comptapro.dto.ClientSearchResponse;
 import com.comptapro.dto.CreateClientRequest;
 import com.comptapro.dto.UpdateClientRequest;
 import com.comptapro.security.AccountantUserDetails;
@@ -35,6 +37,19 @@ public class ClientController {
             @AuthenticationPrincipal AccountantUserDetails userDetails) {
         List<ClientResponse> clients = clientService.getClientsByAccountant(userDetails.getAccountantId());
         return ResponseEntity.ok(clients);
+    }
+
+    /**
+     * Recherche multi-critere des dossiers (criteres optionnels et cumulables).
+     * Exemple : /api/clients/search?raisonSociale=tech&statuts=ACTIF&statuts=EN_COURS
+     */
+    @GetMapping("/search")
+    public ResponseEntity<ClientSearchResponse> searchClients(
+            @AuthenticationPrincipal AccountantUserDetails userDetails,
+            @ModelAttribute ClientSearchCriteria criteria) {
+        ClientSearchResponse response =
+                clientService.searchClients(userDetails.getAccountantId(), criteria);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")

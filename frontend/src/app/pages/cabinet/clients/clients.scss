@@ -143,6 +143,155 @@
   }
 }
 
+// Panneau de recherche
+.search {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #6b7280;
+      margin-bottom: 0.375rem;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.15s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #0066ff;
+        box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+      }
+    }
+
+    select {
+      cursor: pointer;
+    }
+  }
+
+  &__statuts {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+
+    &-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #6b7280;
+      margin-right: 0.25rem;
+    }
+  }
+
+  &__chip {
+    padding: 0.375rem 0.85rem;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background: white;
+    color: #374151;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      border-color: #9ca3af;
+    }
+
+    &--active {
+      background: #0066ff;
+      border-color: #0066ff;
+      color: white;
+    }
+  }
+
+  &__error {
+    margin-top: 0.85rem;
+    color: #dc2626;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  &__counter {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  &__reset {
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+  }
+}
+
+// Badge de statut
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+
+  &[data-statut='ACTIF'] {
+    background: #ecfdf5;
+    color: #059669;
+  }
+
+  &[data-statut='EN_COURS'] {
+    background: #fff7ed;
+    color: #ea580c;
+  }
+
+  &[data-statut='CLOTURE'] {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+}
+
 // Modal styles
 .modal-overlay {
   position: fixed;

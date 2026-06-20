@@ -1,8 +1,10 @@
 package com.comptapro.dto;
 
 import com.comptapro.model.Client;
+import com.comptapro.model.FormeJuridique;
 import com.comptapro.model.RegimeFiscal;
 import com.comptapro.model.RegimeTVA;
+import com.comptapro.model.StatutDossier;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +22,9 @@ public class ClientResponse {
     private Long id;
     private String raisonSociale;
     private String siren;
+    private FormeJuridique formeJuridique;
+    private StatutDossier statut;
+    private LocalDate dateImmatriculation;
     private RegimeFiscal regimeFiscal;
     private RegimeTVA regimeTVA;
     private LocalDate dateDebutExercice;
@@ -32,6 +37,9 @@ public class ClientResponse {
                 .id(client.getId())
                 .raisonSociale(client.getRaisonSociale())
                 .siren(client.getSiren())
+                .formeJuridique(client.getFormeJuridique())
+                .statut(client.getStatut())
+                .dateImmatriculation(client.getDateImmatriculation())
                 .regimeFiscal(client.getRegimeFiscal())
                 .regimeTVA(client.getRegimeTVA())
                 .dateDebutExercice(client.getDateDebutExercice())

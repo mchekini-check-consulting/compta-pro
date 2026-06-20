@@ -27,6 +27,19 @@ public class Client {
     @Column(nullable = false, length = 9)
     private String siren;
 
+    // Champs nullable au niveau BDD pour ne pas casser la migration ddl-auto=update
+    // sur d'eventuelles lignes existantes ; obligatoires au niveau API (DTO).
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private FormeJuridique formeJuridique;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private StatutDossier statut;
+
+    /** Date d'immatriculation au RCS (filtre "Date de creation", RG-005). */
+    private LocalDate dateImmatriculation;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RegimeFiscal regimeFiscal;

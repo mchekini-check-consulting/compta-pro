@@ -9,10 +9,91 @@
     </button>
   </div>
 
+  <!-- Panneau de recherche multi-critere (AC-01) -->
+  <form class="search" [formGroup]="searchForm">
+    <div class="search__grid">
+      <div class="search__field">
+        <label>Raison sociale</label>
+        <input type="text" formControlName="raisonSociale" placeholder="Rechercher..." />
+      </div>
+
+      <div class="search__field">
+        <label>SIREN</label>
+        <input type="text" formControlName="siren" placeholder="9 chiffres" maxlength="9" />
+      </div>
+
+      <div class="search__field">
+        <label>Forme juridique</label>
+        <select formControlName="formeJuridique">
+          <option value="">Toutes</option>
+          @for (forme of formesJuridiques; track forme.value) {
+            <option [value]="forme.value">{{ forme.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="search__field">
+        <label>Date de creation (du)</label>
+        <input type="date" formControlName="dateDebut" />
+      </div>
+
+      <div class="search__field">
+        <label>Date de creation (au)</label>
+        <input type="date" formControlName="dateFin" />
+      </div>
+    </div>
+
+    <div class="search__statuts">
+      <span class="search__statuts-label">Statut</span>
+      @for (s of statutsDossier; track s.value) {
+        <button
+          type="button"
+          class="search__chip"
+          [class.search__chip--active]="isStatutSelected(s.value)"
+          [attr.data-statut]="s.value"
+          (click)="toggleStatut(s.value)"
+        >
+          {{ s.label }}
+        </button>
+      }
+    </div>
+
+    @if (dateRangeError) {
+      <div class="search__error">{{ dateRangeError }}</div>
+    }
+
+    <div class="search__footer">
+      <span class="search__counter">
+        @if (hasActiveFilters()) {
+          {{ filteredCount }} dossier{{ filteredCount > 1 ? 's' : '' }} sur {{ total }}
+        } @else {
+          {{ total }} dossier{{ total > 1 ? 's' : '' }}
+        }
+      </span>
+      @if (hasActiveFilters()) {
+        <button type="button" class="search__reset" (click)="resetFilters()">
+          Reinitialiser les filtres
+        </button>
+      }
+    </div>
+  </form>
+
   @if (isLoading) {
     <div class="clients__loading">
       <div class="clients__spinner"></div>
       <span>Chargement des dossiers...</span>
+    </div>
+  } @else if (clients.length === 0 && hasActiveFilters()) {
+    <!-- AC-12 : aucun resultat -->
+    <div class="clients__empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4.3-4.3" />
+      </svg>
+      <h3>Aucun dossier trouve pour ces criteres</h3>
+      <button type="button" class="search__reset" (click)="resetFilters()">
+        Reinitialiser les filtres
+      </button>
     </div>
   } @else if (clients.length === 0) {
     <div class="clients__empty">
@@ -29,7 +110,8 @@
           <tr>
             <th>Raison sociale</th>
             <th>SIREN</th>
-            <th>Regime fiscal</th>
+            <th>Forme juridique</th>
+            <th>Statut</th>
             <th>Date de creation</th>
           </tr>
         </thead>
@@ -38,8 +120,15 @@
             <tr (click)="openViewModal(client)">
               <td class="clients__cell-main">{{ client.raisonSociale }}</td>
               <td>{{ client.siren }}</td>
-              <td>{{ client.regimeFiscal }}</td>
-              <td>{{ formatDate(client.createdAt) }}</td>
+              <td>{{ getFormeJuridiqueLabel(client.formeJuridique) }}</td>
+              <td>
+                @if (client.statut) {
+                  <span class="badge" [attr.data-statut]="client.statut">
+                    {{ getStatutLabel(client.statut) }}
+                  </span>
+                }
+              </td>
+              <td>{{ formatDate(client.dateImmatriculation) }}</td>
             </tr>
           }
         </tbody>
@@ -83,6 +172,33 @@
           @if (createForm.get('siren')?.invalid && createForm.get('siren')?.touched) {
             <span class="modal__field-error">SIREN invalide</span>
           }
+        </div>
+
+        <div class="modal__row">
+          <div class="modal__field">
+            <label>Forme juridique *</label>
+            <select formControlName="formeJuridique">
+              <option value="">Selectionnez...</option>
+              @for (forme of formesJuridiques; track forme.value) {
+                <option [value]="forme.value">{{ forme.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="modal__field">
+            <label>Statut *</label>
+            <select formControlName="statut">
+              <option value="">Selectionnez...</option>
+              @for (s of statutsDossier; track s.value) {
+                <option [value]="s.value">{{ s.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="modal__field">
+          <label>Date d'immatriculation (RCS) *</label>
+          <input type="date" formControlName="dateImmatriculation" />
         </div>
 
         <div class="modal__row">
@@ -184,6 +300,47 @@
             }
           } @else {
             <div class="modal__value">{{ selectedClient.siren }}</div>
+          }
+        </div>
+
+        <div class="modal__row">
+          <div class="modal__field">
+            <label>Forme juridique</label>
+            @if (isEditMode) {
+              <select formControlName="formeJuridique" (change)="onFieldChange()">
+                @for (forme of formesJuridiques; track forme.value) {
+                  <option [value]="forme.value">{{ forme.label }}</option>
+                }
+              </select>
+            } @else {
+              <div class="modal__value">{{ getFormeJuridiqueLabel(selectedClient.formeJuridique) }}</div>
+            }
+          </div>
+
+          <div class="modal__field">
+            <label>Statut</label>
+            @if (isEditMode) {
+              <select formControlName="statut" (change)="onFieldChange()">
+                @for (s of statutsDossier; track s.value) {
+                  <option [value]="s.value">{{ s.label }}</option>
+                }
+              </select>
+            } @else {
+              <div class="modal__value">
+                <span class="badge" [attr.data-statut]="selectedClient.statut">
+                  {{ getStatutLabel(selectedClient.statut) }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="modal__field">
+          <label>Date d'immatriculation (RCS)</label>
+          @if (isEditMode) {
+            <input type="date" formControlName="dateImmatriculation" (change)="onFieldChange()" />
+          } @else {
+            <div class="modal__value">{{ formatDate(selectedClient.dateImmatriculation) }}</div>
           }
         </div>
 

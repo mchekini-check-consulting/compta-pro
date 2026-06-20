@@ -1,15 +1,20 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth';
 
 export type RegimeFiscal = 'IR' | 'IS';
 export type RegimeTVA = 'MENSUELLE' | 'TRIMESTRIELLE' | 'ANNUELLE';
+export type FormeJuridique = 'SARL' | 'SAS' | 'SASU' | 'EURL' | 'EI' | 'SA' | 'SCI' | 'AUTRE';
+export type StatutDossier = 'ACTIF' | 'EN_COURS' | 'CLOTURE';
 
 export interface Client {
   id: number;
   raisonSociale: string;
   siren: string;
+  formeJuridique: FormeJuridique;
+  statut: StatutDossier;
+  dateImmatriculation: string;
   regimeFiscal: RegimeFiscal;
   regimeTVA: RegimeTVA;
   dateDebutExercice: string;
@@ -21,6 +26,9 @@ export interface Client {
 export interface CreateClientRequest {
   raisonSociale: string;
   siren: string;
+  formeJuridique: FormeJuridique;
+  statut: StatutDossier;
+  dateImmatriculation: string;
   regimeFiscal: RegimeFiscal;
   regimeTVA: RegimeTVA;
   dateDebutExercice: string;
@@ -30,10 +38,28 @@ export interface CreateClientRequest {
 export interface UpdateClientRequest {
   raisonSociale: string;
   siren: string;
+  formeJuridique: FormeJuridique;
+  statut: StatutDossier;
+  dateImmatriculation: string;
   regimeFiscal: RegimeFiscal;
   regimeTVA: RegimeTVA;
   dateDebutExercice: string;
   dateFinExercice: string;
+}
+
+export interface ClientSearchCriteria {
+  raisonSociale?: string;
+  siren?: string;
+  formeJuridique?: FormeJuridique | '';
+  statuts?: StatutDossier[];
+  dateDebut?: string;
+  dateFin?: string;
+}
+
+export interface ClientSearchResponse {
+  count: number;
+  total: number;
+  clients: Client[];
 }
 
 @Injectable({
@@ -53,6 +79,32 @@ export class ClientService {
 
   getClients(): Observable<Client[]> {
     return this.http.get<Client[]>(this.apiUrl, { headers: this.getHeaders() });
+  }
+
+  searchClients(criteria: ClientSearchCriteria): Observable<ClientSearchResponse> {
+    let params = new HttpParams();
+    if (criteria.raisonSociale?.trim()) {
+      params = params.set('raisonSociale', criteria.raisonSociale.trim());
+    }
+    if (criteria.siren?.trim()) {
+      params = params.set('siren', criteria.siren.trim());
+    }
+    if (criteria.formeJuridique) {
+      params = params.set('formeJuridique', criteria.formeJuridique);
+    }
+    if (criteria.statuts?.length) {
+      criteria.statuts.forEach((s) => (params = params.append('statuts', s)));
+    }
+    if (criteria.dateDebut) {
+      params = params.set('dateDebut', criteria.dateDebut);
+    }
+    if (criteria.dateFin) {
+      params = params.set('dateFin', criteria.dateFin);
+    }
+    return this.http.get<ClientSearchResponse>(`${this.apiUrl}/search`, {
+      headers: this.getHeaders(),
+      params,
+    });
   }
 
   getClient(id: number): Observable<Client> {

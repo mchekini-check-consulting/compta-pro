@@ -1,7 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ClientService, Client, RegimeFiscal, RegimeTVA } from '../../../services/client';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+import {
+  ClientService,
+  Client,
+  RegimeFiscal,
+  RegimeTVA,
+  FormeJuridique,
+  StatutDossier,
+  ClientSearchCriteria,
+} from '../../../services/client';
 
 @Component({
   selector: 'app-clients',
@@ -13,6 +23,15 @@ import { ClientService, Client, RegimeFiscal, RegimeTVA } from '../../../service
 export class Clients implements OnInit {
   clients: Client[] = [];
   isLoading = true;
+
+  // Recherche / filtres
+  searchForm: FormGroup;
+  selectedStatuts: StatutDossier[] = [];
+  total = 0;
+  filteredCount = 0;
+  dateRangeError = '';
+  private readonly filterChanged$ = new Subject<void>();
+  private static readonly FILTERS_KEY = 'clients.filters';
 
   // Modal creation
   showCreateModal = false;
@@ -42,22 +61,53 @@ export class Clients implements OnInit {
     { value: 'ANNUELLE', label: 'TVA annuelle' }
   ];
 
+  formesJuridiques: { value: FormeJuridique; label: string }[] = [
+    { value: 'SARL', label: 'SARL' },
+    { value: 'SAS', label: 'SAS' },
+    { value: 'SASU', label: 'SASU' },
+    { value: 'EURL', label: 'EURL' },
+    { value: 'EI', label: 'EI' },
+    { value: 'SA', label: 'SA' },
+    { value: 'SCI', label: 'SCI' },
+    { value: 'AUTRE', label: 'Autre' }
+  ];
+
+  statutsDossier: { value: StatutDossier; label: string }[] = [
+    { value: 'ACTIF', label: 'Actif' },
+    { value: 'EN_COURS', label: 'En cours' },
+    { value: 'CLOTURE', label: 'Cloture' }
+  ];
+
   constructor(
     private clientService: ClientService,
     private fb: FormBuilder
   ) {
     this.createForm = this.createClientForm();
     this.editForm = this.createClientForm();
+    this.searchForm = this.fb.group({
+      raisonSociale: [''],
+      siren: [''],
+      formeJuridique: [''],
+      dateDebut: [''],
+      dateFin: ['']
+    });
   }
 
   ngOnInit(): void {
-    this.loadClients();
+    this.restoreFilters();
+    // Recherche temps reel : on debounce a 300ms (mise a jour < 500ms, AC-11/RG-007)
+    this.filterChanged$.pipe(debounceTime(300)).subscribe(() => this.performSearch());
+    this.searchForm.valueChanges.subscribe(() => this.onFilterChange());
+    this.performSearch();
   }
 
   private createClientForm(): FormGroup {
     return this.fb.group({
       raisonSociale: ['', [Validators.required]],
       siren: ['', [Validators.required, Validators.pattern(/^[0-9]{9}$/)]],
+      formeJuridique: ['', [Validators.required]],
+      statut: ['', [Validators.required]],
+      dateImmatriculation: ['', [Validators.required]],
       regimeFiscal: ['', [Validators.required]],
       regimeTVA: ['', [Validators.required]],
       dateDebutExercice: ['', [Validators.required]],
@@ -65,17 +115,97 @@ export class Clients implements OnInit {
     });
   }
 
-  loadClients(): void {
-    this.isLoading = true;
-    this.clientService.getClients().subscribe({
-      next: (clients) => {
-        this.clients = clients;
+  // === RECHERCHE / FILTRES ===
+  private buildCriteria(): ClientSearchCriteria {
+    const v = this.searchForm.value;
+    return {
+      raisonSociale: v.raisonSociale || undefined,
+      siren: v.siren || undefined,
+      formeJuridique: v.formeJuridique || undefined,
+      statuts: this.selectedStatuts.length ? this.selectedStatuts : undefined,
+      dateDebut: v.dateDebut || undefined,
+      dateFin: v.dateFin || undefined
+    };
+  }
+
+  performSearch(): void {
+    // AC-09 : date de debut posterieure a la date de fin -> message, liste non mise a jour
+    const { dateDebut, dateFin } = this.searchForm.value;
+    if (dateDebut && dateFin && new Date(dateDebut) > new Date(dateFin)) {
+      this.dateRangeError = 'La date de debut doit etre anterieure a la date de fin';
+      return;
+    }
+    this.dateRangeError = '';
+
+    this.clientService.searchClients(this.buildCriteria()).subscribe({
+      next: (res) => {
+        this.clients = res.clients;
+        this.filteredCount = res.count;
+        this.total = res.total;
         this.isLoading = false;
       },
       error: () => {
         this.isLoading = false;
       }
     });
+  }
+
+  private onFilterChange(): void {
+    this.persistFilters();
+    this.filterChanged$.next();
+  }
+
+  toggleStatut(statut: StatutDossier): void {
+    const index = this.selectedStatuts.indexOf(statut);
+    if (index >= 0) {
+      this.selectedStatuts.splice(index, 1);
+    } else {
+      this.selectedStatuts.push(statut);
+    }
+    this.onFilterChange();
+  }
+
+  isStatutSelected(statut: StatutDossier): boolean {
+    return this.selectedStatuts.includes(statut);
+  }
+
+  hasActiveFilters(): boolean {
+    const v = this.searchForm.value;
+    return !!(v.raisonSociale || v.siren || v.formeJuridique || v.dateDebut || v.dateFin
+      || this.selectedStatuts.length);
+  }
+
+  resetFilters(): void {
+    this.selectedStatuts = [];
+    this.dateRangeError = '';
+    // reset sans emettre pour eviter une recherche intermediaire, puis une seule recherche
+    this.searchForm.reset(
+      { raisonSociale: '', siren: '', formeJuridique: '', dateDebut: '', dateFin: '' },
+      { emitEvent: false }
+    );
+    this.persistFilters();
+    this.performSearch();
+  }
+
+  private persistFilters(): void {
+    const state = { form: this.searchForm.value, statuts: this.selectedStatuts };
+    sessionStorage.setItem(Clients.FILTERS_KEY, JSON.stringify(state));
+  }
+
+  private restoreFilters(): void {
+    const raw = sessionStorage.getItem(Clients.FILTERS_KEY);
+    if (!raw) return;
+    try {
+      const state = JSON.parse(raw);
+      if (state.form) {
+        this.searchForm.patchValue(state.form, { emitEvent: false });
+      }
+      if (Array.isArray(state.statuts)) {
+        this.selectedStatuts = state.statuts;
+      }
+    } catch {
+      // etat corrompu : on ignore
+    }
   }
 
   // === CREATE MODAL ===
@@ -121,10 +251,11 @@ export class Clients implements OnInit {
     this.createError = '';
 
     this.clientService.createClient(this.createForm.value).subscribe({
-      next: (client) => {
+      next: () => {
         this.isCreating = false;
-        this.clients.unshift(client);
         this.closeCreateModal();
+        // re-applique les filtres courants pour refleter le nouvel etat (tri + compteur)
+        this.performSearch();
       },
       error: (error) => {
         this.isCreating = false;
@@ -143,6 +274,9 @@ export class Clients implements OnInit {
     this.editForm.patchValue({
       raisonSociale: client.raisonSociale,
       siren: client.siren,
+      formeJuridique: client.formeJuridique,
+      statut: client.statut,
+      dateImmatriculation: client.dateImmatriculation,
       regimeFiscal: client.regimeFiscal,
       regimeTVA: client.regimeTVA,
       dateDebutExercice: client.dateDebutExercice,
@@ -162,6 +296,9 @@ export class Clients implements OnInit {
       this.hasChanges =
         current.raisonSociale !== this.selectedClient.raisonSociale ||
         current.siren !== this.selectedClient.siren ||
+        current.formeJuridique !== this.selectedClient.formeJuridique ||
+        current.statut !== this.selectedClient.statut ||
+        current.dateImmatriculation !== this.selectedClient.dateImmatriculation ||
         current.regimeFiscal !== this.selectedClient.regimeFiscal ||
         current.regimeTVA !== this.selectedClient.regimeTVA ||
         current.dateDebutExercice !== this.selectedClient.dateDebutExercice ||
@@ -187,13 +324,9 @@ export class Clients implements OnInit {
         this.isEditMode = false;
         this.hasChanges = false;
 
-        // Update in list
-        const index = this.clients.findIndex(c => c.id === updatedClient.id);
-        if (index !== -1) {
-          this.clients[index] = updatedClient;
-        }
+        // re-applique les filtres pour garder la liste coherente (tri, statut, etc.)
+        this.performSearch();
 
-        // Auto-hide success message after 3 seconds
         setTimeout(() => {
           this.updateSuccess = false;
         }, 3000);
@@ -232,6 +365,14 @@ export class Clients implements OnInit {
 
   getRegimeTVALabel(value: RegimeTVA): string {
     return this.regimesTVA.find(r => r.value === value)?.label || value;
+  }
+
+  getFormeJuridiqueLabel(value: FormeJuridique): string {
+    return this.formesJuridiques.find(f => f.value === value)?.label || value;
+  }
+
+  getStatutLabel(value: StatutDossier): string {
+    return this.statutsDossier.find(s => s.value === value)?.label || value;
   }
 
   formatDate(dateString: string): string {
