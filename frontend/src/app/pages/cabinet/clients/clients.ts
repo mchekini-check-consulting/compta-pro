@@ -13,10 +13,13 @@ import {
   ClientSearchCriteria,
 } from '../../../services/client';
 
+import { DossierNav } from '../../../components/dossier/dossier-nav/dossier-nav';
+import { DossierDrawer } from '../../../components/dossier/dossier-drawer/dossier-drawer';
+
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, DossierNav, DossierDrawer],
   templateUrl: './clients.html',
   styleUrl: './clients.scss'
 })

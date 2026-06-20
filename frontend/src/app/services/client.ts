@@ -21,6 +21,8 @@ export interface Client {
   dateFinExercice: string;
   createdAt: string;
   updatedAt?: string;
+  /** Vrai si au moins une mission sociale est rattachee au dossier (RG-005). */
+  hasMissionSociale?: boolean;
 }
 
 export interface CreateClientRequest {

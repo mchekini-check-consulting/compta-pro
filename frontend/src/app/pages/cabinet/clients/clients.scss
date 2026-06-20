@@ -141,6 +141,22 @@
     font-weight: 600;
     color: #1a1a2e !important;
   }
+
+  // Statut + icones de navigation alignes horizontalement (AC-02)
+  &__cell-statut {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+}
+
+// RG-007 : sur mobile, les icones passent sous le badge de statut
+@media (max-width: 768px) {
+  .clients__cell-statut {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 }
 
 // Panneau de recherche

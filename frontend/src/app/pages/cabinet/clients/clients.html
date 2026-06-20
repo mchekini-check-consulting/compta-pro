@@ -112,7 +112,6 @@
             <th>SIREN</th>
             <th>Forme juridique</th>
             <th>Statut</th>
-            <th>Date de creation</th>
           </tr>
         </thead>
         <tbody>
@@ -122,13 +121,16 @@
               <td>{{ client.siren }}</td>
               <td>{{ getFormeJuridiqueLabel(client.formeJuridique) }}</td>
               <td>
-                @if (client.statut) {
-                  <span class="badge" [attr.data-statut]="client.statut">
-                    {{ getStatutLabel(client.statut) }}
-                  </span>
-                }
+                <!-- Statut + 3 icones de navigation (AC-01/AC-02) -->
+                <div class="clients__cell-statut">
+                  @if (client.statut) {
+                    <span class="badge" [attr.data-statut]="client.statut">
+                      {{ getStatutLabel(client.statut) }}
+                    </span>
+                  }
+                  <app-dossier-nav [client]="client" />
+                </div>
               </td>
-              <td>{{ formatDate(client.dateImmatriculation) }}</td>
             </tr>
           }
         </tbody>
@@ -431,3 +433,6 @@
     </div>
   </div>
 }
+
+<!-- Drawer unique des sections de dossier (TREZ-39) -->
+<app-dossier-drawer />
