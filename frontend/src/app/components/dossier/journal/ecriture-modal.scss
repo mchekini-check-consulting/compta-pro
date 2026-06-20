@@ -1,0 +1,307 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 1.5rem;
+}
+
+.ecriture {
+  background: #fff;
+  border-radius: 12px;
+  width: min(820px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+  }
+
+  &__close {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 6px;
+
+    &:hover { background: #f3f4f6; }
+    svg { width: 18px; height: 18px; }
+  }
+
+  &__error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    input {
+      padding: 0.55rem 0.7rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9rem;
+
+      &.is-invalid { border-color: #dc2626; }
+      &:read-only { background: #f9fafb; color: #374151; }
+    }
+  }
+
+  &__placeholder { color: #9ca3af; font-style: italic; }
+
+  &__field-error,
+  &__line-error {
+    color: #dc2626;
+    font-size: 0.75rem;
+  }
+
+  // --- Lignes ---
+  &__lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  &__line {
+    display: grid;
+    grid-template-columns: 2.2fr 2.2fr 1fr 1fr 32px;
+    gap: 0.5rem;
+    align-items: start;
+
+    &--head {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      align-items: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.5rem 0.6rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.875rem;
+
+      &:disabled { background: #f3f4f6; color: #9ca3af; }
+    }
+  }
+
+  &__amount { text-align: right; }
+  input.ecriture__amount { text-align: right; }
+
+  &__line-error { grid-column: 1 / -1; }
+
+  // --- Compte + dropdown ---
+  &__compte { position: relative; }
+
+  &__compte-input {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  &__book {
+    flex-shrink: 0;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0 0.4rem;
+    font-size: 1rem;
+  }
+
+  &__compte-label {
+    display: block;
+    font-size: 0.72rem;
+    color: #6b7280;
+    margin-top: 0.2rem;
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.25rem;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+    li {
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.83rem;
+      cursor: pointer;
+
+      &:hover { background: #eff6ff; }
+      strong { color: #1a1a2e; }
+    }
+  }
+
+  &__dropdown-empty { color: #9ca3af; cursor: default; }
+
+  &__remove,
+  &__book {
+    align-self: start;
+  }
+
+  &__remove {
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    cursor: pointer;
+    border-radius: 6px;
+
+    &:hover:not(:disabled) { background: #fef2f2; color: #dc2626; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  &__add {
+    border: 1px dashed #93c5fd;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 8px;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1.25rem;
+
+    &:hover { background: #dbeafe; }
+  }
+
+  // --- Totaux ---
+  &__totaux {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    font-weight: 700;
+    color: #15803d;
+    margin-bottom: 1.25rem;
+
+    span:first-child { margin-right: auto; color: #374151; }
+
+    &--ko {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #b91c1c;
+    }
+  }
+
+  &__sep { font-size: 1.1rem; }
+
+  // --- Actions ---
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  &__btn-cancel,
+  &__btn-save,
+  &__btn-danger {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+  }
+
+  &__btn-cancel {
+    background: #f3f4f6;
+    color: #374151;
+    &:hover { background: #e5e7eb; }
+  }
+
+  &__btn-save {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:disabled { opacity: 0.45; cursor: not-allowed; }
+  }
+
+  &__btn-danger {
+    background: #dc2626;
+    color: #fff;
+    &:hover { background: #b91c1c; }
+  }
+
+  &__spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+.confirm {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: min(420px, 100%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  h3 { font-size: 1.1rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.5rem; }
+  p { color: #4b5563; font-size: 0.9rem; margin-bottom: 1.25rem; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

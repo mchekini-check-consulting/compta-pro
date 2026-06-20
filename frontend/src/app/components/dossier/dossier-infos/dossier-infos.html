@@ -1,0 +1,77 @@
+<div class="infos">
+  <!-- Section 1 : Identite (AC-05) -->
+  <section class="infos__section">
+    <h3 class="infos__title">Identite</h3>
+    <dl class="infos__grid">
+      <dt>Raison sociale</dt>
+      <dd>{{ client.raisonSociale }}</dd>
+
+      <dt>Forme juridique</dt>
+      <dd>{{ client.formeJuridique || DASH }}</dd>
+
+      <dt>SIREN</dt>
+      <dd class="infos__siren">
+        {{ formatSiren(client.siren) }}
+        <button type="button" class="infos__copy" aria-label="Copier le SIREN" (click)="copySiren()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="9" y="9" width="11" height="11" rx="2" />
+            <path d="M5 15V5a2 2 0 012-2h10" />
+          </svg>
+        </button>
+        @if (sirenCopie) {
+          <span class="infos__copied">SIREN copie</span>
+        }
+      </dd>
+
+      <dt>SIRET siege</dt>
+      <dd>{{ DASH }}</dd>
+
+      <dt>Code APE / NAF</dt>
+      <dd>{{ DASH }}</dd>
+
+      <dt>Date d'immatriculation</dt>
+      <dd>{{ formatDate(client.dateImmatriculation) }}</dd>
+
+      <dt>Adresse siege social</dt>
+      <dd>{{ DASH }}</dd>
+    </dl>
+  </section>
+
+  <!-- Section 2 : Gestion cabinet (AC-07/AC-08) -->
+  <section class="infos__section">
+    <h3 class="infos__title">Gestion cabinet</h3>
+    <dl class="infos__grid">
+      <dt>Date d'entree au cabinet</dt>
+      <dd>{{ DASH }}</dd>
+
+      <dt>Date de cloture d'exercice</dt>
+      <dd>
+        {{ clotureJourMois() }}
+        <div class="infos__cloture">
+          Prochaine cloture : {{ prochaineClotureLabel() }}
+          @if (prochaineClotureProche()) {
+            <span class="infos__badge infos__badge--alerte">Sous 30 jours</span>
+          }
+        </div>
+      </dd>
+
+      <dt>Gestionnaire assigne</dt>
+      <dd>{{ DASH }}</dd>
+
+      <dt>Regime fiscal</dt>
+      <dd>{{ regimeFiscalLabel() }}</dd>
+
+      <dt>Regime TVA</dt>
+      <dd>{{ regimeTVALabel() }}</dd>
+    </dl>
+  </section>
+
+  <!-- Section 3 : Contacts (AC-10 : aucun contact dans le modele) -->
+  <section class="infos__section">
+    <h3 class="infos__title">Contacts</h3>
+    <div class="infos__empty">
+      Aucun contact renseigne
+      <a class="infos__link" href="javascript:void(0)">Ajouter un contact</a>
+    </div>
+  </section>
+</div>

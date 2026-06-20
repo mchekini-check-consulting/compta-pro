@@ -1,0 +1,102 @@
+.infos {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__section {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+  }
+
+  &__title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #0066ff;
+    margin-bottom: 0.75rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: minmax(120px, 40%) 1fr;
+    gap: 0.5rem 1rem;
+    margin: 0;
+
+    dt {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    dd {
+      margin: 0;
+      font-size: 0.88rem;
+      color: #1a1a2e;
+      font-weight: 500;
+      word-break: break-word;
+    }
+  }
+
+  &__siren {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__copy {
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 4px;
+
+    &:hover { background: #eff6ff; color: #0066ff; }
+    svg { width: 15px; height: 15px; }
+  }
+
+  &__copied {
+    font-size: 0.72rem;
+    color: #16a34a;
+    font-weight: 600;
+  }
+
+  &__cloture {
+    margin-top: 0.25rem;
+    font-size: 0.78rem;
+    color: #6b7280;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
+
+    &--alerte {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    color: #6b7280;
+    font-size: 0.85rem;
+  }
+
+  &__link {
+    color: #0066ff;
+    font-weight: 600;
+    text-decoration: none;
+    width: fit-content;
+
+    &:hover { text-decoration: underline; }
+  }
+}

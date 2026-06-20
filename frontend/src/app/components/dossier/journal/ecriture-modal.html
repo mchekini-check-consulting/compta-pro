@@ -1,0 +1,162 @@
+<div class="modal-overlay" (click)="attemptClose()">
+  <div class="ecriture" (click)="$event.stopPropagation()">
+    <div class="ecriture__header">
+      <h2>Nouvelle ecriture comptable — Saisie manuelle dans le journal</h2>
+      <button type="button" class="ecriture__close" aria-label="Fermer" (click)="attemptClose()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    @if (submitError) {
+      <div class="ecriture__error">{{ submitError }}</div>
+    }
+
+    <!-- En-tete : date + numero d'operation -->
+    <div class="ecriture__meta">
+      <div class="ecriture__field">
+        <label>Date *</label>
+        <input
+          type="text"
+          placeholder="jj/mm/aaaa"
+          [(ngModel)]="dateStr"
+          [class.is-invalid]="dateError()"
+        />
+        @if (dateError()) {
+          <span class="ecriture__field-error">{{ dateError() }}</span>
+        }
+      </div>
+
+      <div class="ecriture__field">
+        <label>N° d'operation</label>
+        <input
+          type="text"
+          [value]="numeroOperation || 'En attente du premier compte'"
+          [class.ecriture__placeholder]="!numeroOperation"
+          readonly
+        />
+      </div>
+    </div>
+
+    <!-- Lignes de saisie -->
+    <div class="ecriture__lines">
+      <div class="ecriture__line ecriture__line--head">
+        <span>Compte</span>
+        <span>Libelle</span>
+        <span class="ecriture__amount">Debit</span>
+        <span class="ecriture__amount">Credit</span>
+        <span></span>
+      </div>
+
+      @for (ligne of lignes; track ligne; let i = $index) {
+        <div class="ecriture__line">
+          <!-- Compte + recherche plan comptable (RG-008) -->
+          <div class="ecriture__compte">
+            <div class="ecriture__compte-input">
+              <input
+                type="text"
+                placeholder="N° ou libelle"
+                [(ngModel)]="ligne.compteInput"
+                (ngModelChange)="onCompteInput(ligne)"
+                (focus)="ligne.showDropdown = true"
+                (blur)="closeDropdown(ligne)"
+              />
+              <button
+                type="button"
+                class="ecriture__book"
+                aria-label="Rechercher dans le plan comptable"
+                (click)="toggleDropdown(ligne)"
+              >📖</button>
+            </div>
+            @if (ligne.libelleCompte) {
+              <span class="ecriture__compte-label">{{ ligne.libelleCompte }}</span>
+            }
+            @if (ligne.showDropdown) {
+              <ul class="ecriture__dropdown">
+                @for (c of filteredComptes(ligne); track c.numeroCompte) {
+                  <li (mousedown)="selectCompte(ligne, c)">
+                    <strong>{{ c.numeroCompte }}</strong> — {{ c.intitule }}
+                  </li>
+                } @empty {
+                  <li class="ecriture__dropdown-empty">Aucun compte</li>
+                }
+              </ul>
+            }
+          </div>
+
+          <!-- Libelle de ligne (RG-009) -->
+          <div class="ecriture__libelle">
+            <input type="text" placeholder="Libelle" [(ngModel)]="ligne.libelle" />
+            @if (libelleError(ligne)) {
+              <span class="ecriture__field-error">{{ libelleError(ligne) }}</span>
+            }
+          </div>
+
+          <!-- Debit / Credit mutuellement exclusifs (RG-010) -->
+          <input
+            type="text"
+            class="ecriture__amount"
+            placeholder="0.00"
+            [(ngModel)]="ligne.debit"
+            [disabled]="hasCredit(ligne)"
+          />
+          <input
+            type="text"
+            class="ecriture__amount"
+            placeholder="0.00"
+            [(ngModel)]="ligne.credit"
+            [disabled]="hasDebit(ligne)"
+          />
+
+          <button
+            type="button"
+            class="ecriture__remove"
+            aria-label="Supprimer la ligne"
+            [disabled]="lignes.length === 1"
+            (click)="removeLigne(i)"
+          >✕</button>
+
+          @if (montantError(ligne)) {
+            <span class="ecriture__line-error">{{ montantError(ligne) }}</span>
+          }
+        </div>
+      }
+    </div>
+
+    <button type="button" class="ecriture__add" (click)="addLigne()">+ Ajouter une ligne</button>
+
+    <!-- Totaux temps reel (RG-013) -->
+    <div class="ecriture__totaux" [class.ecriture__totaux--ko]="!isEquilibre() && totalDebit() > 0">
+      <span>TOTAUX</span>
+      <span class="ecriture__amount">Debit {{ totalDebit().toFixed(2) }}</span>
+      <span class="ecriture__sep">{{ isEquilibre() ? '=' : '≠' }}</span>
+      <span class="ecriture__amount">Credit {{ totalCredit().toFixed(2) }}</span>
+    </div>
+
+    <div class="ecriture__actions">
+      <button type="button" class="ecriture__btn-cancel" (click)="attemptClose()">Annuler</button>
+      <button type="button" class="ecriture__btn-save" [disabled]="!canSave()" (click)="submit()">
+        @if (saving) {
+          <span class="ecriture__spinner"></span> Enregistrement...
+        } @else {
+          Enregistrer en brouillon
+        }
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation de fermeture (RG-017) -->
+@if (showConfirmClose) {
+  <div class="modal-overlay" (click)="cancelClose()">
+    <div class="confirm" (click)="$event.stopPropagation()">
+      <h3>Confirmer</h3>
+      <p>Les donnees saisies seront perdues. Confirmer ?</p>
+      <div class="ecriture__actions">
+        <button type="button" class="ecriture__btn-cancel" (click)="cancelClose()">Annuler</button>
+        <button type="button" class="ecriture__btn-danger" (click)="confirmClose()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+}

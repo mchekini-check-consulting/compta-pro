@@ -1,0 +1,57 @@
+<!-- Drawer unique : un seul ouvert a la fois, tous dossiers confondus (RG-004) -->
+@if (state(); as s) {
+  <div class="dossier-drawer__overlay" (click)="close()"></div>
+  <aside
+    class="dossier-drawer"
+    [attr.data-section]="s.section"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title()"
+  >
+    <header class="dossier-drawer__header">
+      <div>
+        <h2 class="dossier-drawer__title">{{ title() }}</h2>
+        <p class="dossier-drawer__subtitle">{{ s.client.raisonSociale }}</p>
+      </div>
+      <button
+        type="button"
+        class="dossier-drawer__close"
+        aria-label="Fermer le panneau"
+        (click)="close()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="dossier-drawer__body">
+      @if (loading()) {
+        <!-- Skeleton de chargement (TREZ-40 AC-12 / TREZ-41 AC-13) -->
+        <div class="dossier-drawer__skeleton">
+          @for (n of [1, 2, 3, 4, 5, 6]; track n) {
+            <span class="dossier-drawer__skeleton-bar"></span>
+          }
+        </div>
+      } @else if (loadError()) {
+        <!-- Erreur de chargement (TREZ-40 AC-13 / TREZ-41 AC-14) -->
+        <div class="dossier-drawer__error">
+          <p>Impossible de charger les informations. Veuillez reessayer.</p>
+          <button type="button" class="dossier-drawer__retry" (click)="retry()">Reessayer</button>
+        </div>
+      } @else if (detail(); as client) {
+        @switch (s.section) {
+          @case ('infos') {
+            <app-dossier-infos [client]="client" />
+          }
+          @case ('compta') {
+            <app-dossier-compta [client]="client" />
+          }
+          @case ('social') {
+            <app-dossier-social [client]="client" />
+          }
+        }
+      }
+    </div>
+  </aside>
+}

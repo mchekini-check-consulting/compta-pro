@@ -1,0 +1,33 @@
+@if (!hasMissionSociale()) {
+  <!-- AC-09 : aucune mission sociale rattachee -->
+  <div class="social__empty">
+    Aucune mission sociale rattachee a ce dossier
+    <a class="social__link" href="javascript:void(0)">Ajouter une mission sociale</a>
+  </div>
+} @else {
+  <div class="social">
+    <!-- Section 1 : Donnees de base sociales (AC-07) -->
+    <section class="social__section">
+      <h3 class="social__title">Donnees de base</h3>
+      <dl class="social__grid">
+        <dt>Nombre de salaries</dt>
+        <dd>{{ DASH }}</dd>
+
+        <dt>Convention collective</dt>
+        <dd>{{ DASH }}</dd>
+
+        <dt>Periodicite de paie</dt>
+        <dd>{{ DASH }}</dd>
+
+        <dt>Date de versement habituelle</dt>
+        <dd>{{ DASH }}</dd>
+      </dl>
+    </section>
+
+    <!-- Section 2 : Bulletins (AC-08 : aucun historique dans le modele) -->
+    <section class="social__section">
+      <h3 class="social__title">Bulletins — 3 dernieres periodes</h3>
+      <p class="social__msg">Aucun bulletin disponible</p>
+    </section>
+  </div>
+}

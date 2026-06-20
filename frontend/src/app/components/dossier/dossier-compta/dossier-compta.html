@@ -1,0 +1,30 @@
+<div class="compta">
+  <!-- Section 1 : Donnees de base comptables (AC-02) -->
+  <section class="compta__section">
+    <h3 class="compta__title">Donnees de base</h3>
+    <dl class="compta__grid">
+      <dt>Regime fiscal</dt>
+      <dd>{{ regimeFiscalLabel() }}</dd>
+
+      <dt>Regime TVA</dt>
+      <dd>{{ DASH }}</dd>
+
+      <dt>Periodicite TVA</dt>
+      <dd>{{ periodiciteTVALabel() }}</dd>
+
+      <dt>Cloture de l'exercice en cours</dt>
+      <dd>{{ clotureExercice() }}</dd>
+    </dl>
+  </section>
+
+  <!-- Section 2 : Missions en cours (AC-05 : aucune mission dans le modele) -->
+  <section class="compta__section">
+    <h3 class="compta__title">Missions en cours</h3>
+    <p class="compta__empty">Aucune mission comptable en cours</p>
+  </section>
+
+  <!-- Journal de saisie (US ecriture comptable) -->
+  <section class="compta__section">
+    <app-journal-comptable [client]="client" />
+  </section>
+</div>

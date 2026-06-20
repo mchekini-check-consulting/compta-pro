@@ -1,0 +1,150 @@
+$color-infos: #0066ff;
+$color-compta: #16a34a;
+$color-social: #7c3aed;
+
+// Drawer : glissement depuis la droite en < 200 ms (AC-06)
+.dossier-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(480px, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  z-index: 1100;
+  animation: dossier-drawer-in 0.18s ease-out;
+
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1090;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  &__title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  &__subtitle {
+    margin-top: 0.15rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #f3f4f6;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__body {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+  &__placeholder {
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+
+  // Skeleton de chargement
+  &__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  &__skeleton-bar {
+    height: 16px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eef0f2 25%, #e2e5e9 37%, #eef0f2 63%);
+    background-size: 400% 100%;
+    animation: dossier-skeleton 1.4s ease infinite;
+
+    &:nth-child(odd) { width: 90%; }
+    &:nth-child(even) { width: 65%; }
+  }
+
+  // Erreur de chargement + bouton Reessayer
+  &__error {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 2rem 0;
+    color: #b91c1c;
+    font-size: 0.9rem;
+  }
+
+  &__retry {
+    border: 1px solid #d1d5db;
+    background: #fff;
+    border-radius: 8px;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    cursor: pointer;
+
+    &:hover { background: #f3f4f6; }
+  }
+
+  // Liseré coloré rappelant la section ouverte
+  @each $key, $color in (infos: $color-infos, compta: $color-compta, social: $color-social) {
+    &[data-section='#{$key}'] .dossier-drawer__header {
+      border-top: 3px solid $color;
+    }
+  }
+}
+
+@keyframes dossier-drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dossier-skeleton {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}

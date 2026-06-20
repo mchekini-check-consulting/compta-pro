@@ -1,0 +1,99 @@
+// Couleur primaire par section (AC-05) : bleu / vert / violet
+$color-infos: #0066ff;
+$color-compta: #16a34a;
+$color-social: #7c3aed;
+
+.dossier-nav {
+  display: inline-flex;
+  gap: 0.4rem;
+  vertical-align: middle;
+
+  &__btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    // Etat par defaut : fond neutre, icone grise (AC-03)
+    background: #f3f4f6;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+    // Focus clavier : anneau de focus visible (AC-09)
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+
+    // Etat desactive (AC-13 / RG-006) : grise, curseur non-pointer
+    &--disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  // Infobulle : apparait apres 300 ms de survol continu (RG-003),
+  // disparait immediatement a la sortie.
+  &__tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.35rem 0.6rem;
+    background: #1a1a2e;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    border-radius: 6px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0s, visibility 0s; // disparition immediate (delai 0)
+    z-index: 20;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #1a1a2e;
+    }
+  }
+
+  &__btn:hover &__tooltip,
+  &__btn:focus-visible &__tooltip {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 300ms;
+  }
+
+  // --- Couleurs par section : hover (AC-05) et actif (AC-07) ---
+  // Les selecteurs de couleur excluent l'etat desactive (qui reste gris).
+  @each $key, $color in (infos: $color-infos, compta: $color-compta, social: $color-social) {
+    &__btn[data-section='#{$key}']:not(.dossier-nav__btn--disabled) {
+      &:hover {
+        background: rgba($color, 0.12);
+        color: $color;
+      }
+
+      &.dossier-nav__btn--active {
+        background: rgba($color, 0.12);
+        border-color: $color;
+        color: $color;
+      }
+    }
+  }
+}
