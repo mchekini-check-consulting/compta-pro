@@ -1,0 +1,162 @@
+.social {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+  }
+
+  &__count {
+    padding: 0.25rem 0.75rem;
+    background: #f3effd;
+    color: #7c3aed;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    color: #6b7280;
+
+    span {
+      margin-top: 1rem;
+    }
+  }
+
+  &__spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #7c3aed;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  &__table-wrapper {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tbody tr:not(:last-child) {
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    td {
+      font-size: 0.95rem;
+      color: #374151;
+    }
+  }
+
+  &__cell-main {
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    background: white;
+    border-radius: 12px;
+    text-align: center;
+
+    svg {
+      width: 64px;
+      height: 64px;
+      color: #d1d5db;
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: #6b7280;
+    }
+  }
+
+  &__retry {
+    margin-top: 1rem;
+    padding: 0.5rem 1.25rem;
+    background: #7c3aed;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: #6d28d9;
+    }
+  }
+}
+
+// Badge de statut (meme convention que clients.scss)
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &[data-statut='ACTIF'] {
+    background: #ecfdf5;
+    color: #059669;
+  }
+
+  &[data-statut='EN_COURS'] {
+    background: #fff7ed;
+    color: #ea580c;
+  }
+
+  &[data-statut='CLOTURE'] {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+}

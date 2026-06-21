@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { Sidebar } from '../../components/dashboard/sidebar/sidebar';
+import { TasksStore } from '../../services/tasks.store';
 
 @Component({
   selector: 'app-cabinet-layout',
@@ -16,7 +17,8 @@ export class CabinetLayout implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private tasksStore: TasksStore
   ) {}
 
   ngOnInit(): void {
@@ -35,6 +37,9 @@ export class CabinetLayout implements OnInit {
         return;
       }
     }
+
+    // Synchronise les taches avec les dossiers reels (badge sidebar correct partout).
+    this.tasksStore.loadFromBackend();
   }
 
   logout(): void {

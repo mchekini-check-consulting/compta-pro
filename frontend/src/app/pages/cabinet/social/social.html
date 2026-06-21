@@ -1,0 +1,58 @@
+<div class="social">
+  <div class="social__header">
+    <h1>Social</h1>
+    @if (!loading() && !loadError()) {
+      <span class="social__count">{{ missions().length }} mission(s) sociale(s)</span>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="social__loading">
+      <div class="social__spinner"></div>
+      <span>Chargement des dossiers...</span>
+    </div>
+  } @else if (loadError()) {
+    <div class="social__empty">
+      <h3>Dossiers indisponibles</h3>
+      <p>Impossible de charger la liste des dossiers.</p>
+      <button type="button" class="social__retry" (click)="fetchClients()">Reessayer</button>
+    </div>
+  } @else if (missions().length > 0) {
+    <div class="social__table-wrapper">
+      <table class="social__table">
+        <thead>
+          <tr>
+            <th>Dossier</th>
+            <th>Statut</th>
+            <th>Nb salaries</th>
+            <th>Convention collective</th>
+            <th>Periodicite paie</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of missions(); track c.id) {
+            <tr>
+              <td class="social__cell-main">{{ c.raisonSociale }}</td>
+              <td>
+                <span class="badge" [attr.data-statut]="c.statut">{{ c.statut }}</span>
+              </td>
+              <td>—</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="social__empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="9" cy="8" r="3.5" />
+        <path d="M3 20a6 6 0 0112 0" stroke-linecap="round" />
+        <path d="M16 5.5a3.5 3.5 0 010 6.8M17 20a6 6 0 00-2-4.4" stroke-linecap="round" />
+      </svg>
+      <h3>Aucune mission sociale</h3>
+      <p>Aucun dossier ne porte de mission sociale pour le moment.</p>
+    </div>
+  }
+</div>

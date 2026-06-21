@@ -1,0 +1,80 @@
+<div class="taches">
+  <div class="taches__header">
+    <h1>Taches</h1>
+    <span class="taches__count">{{ pendingCount() }} en attente</span>
+  </div>
+
+  <!-- Filtre par statut (AC-04 sidebar : pattern chips de la recherche clients) -->
+  <div class="taches__filters">
+    @for (f of filtres; track f.value) {
+      <button
+        type="button"
+        class="taches__chip"
+        [class.taches__chip--active]="filtre() === f.value"
+        (click)="setFiltre(f.value)"
+      >
+        {{ f.label }}
+      </button>
+    }
+  </div>
+
+  @if (visibleTaches().length > 0) {
+    <div class="taches__table-wrapper">
+      <table class="taches__table">
+        <thead>
+          <tr>
+            <th>Tache</th>
+            <th>Dossier</th>
+            <th>Echeance</th>
+            <th>Priorite</th>
+            <th>Statut</th>
+            <th class="taches__col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of visibleTaches(); track t.id) {
+            <tr [class.taches__row--done]="t.statut === 'FAIT'">
+              <td class="taches__cell-main">{{ t.titre }}</td>
+              <td>{{ t.clientRaisonSociale }}</td>
+              <td>{{ t.echeance | date: 'dd/MM/yyyy' }}</td>
+              <td>
+                <span class="badge-priorite" [attr.data-priorite]="t.priorite">
+                  {{ prioriteLabel(t.priorite) }}
+                </span>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="badge-statut"
+                  [attr.data-statut]="t.statut"
+                  (click)="cycleStatut(t.id)"
+                  title="Changer le statut"
+                >
+                  {{ statutLabel(t.statut) }}
+                </button>
+              </td>
+              <td class="taches__col-actions">
+                @if (t.statut !== 'FAIT') {
+                  <button type="button" class="taches__done-btn" (click)="marquerFait(t.id)">
+                    Marquer fait
+                  </button>
+                } @else {
+                  <span class="taches__done-label">Termine</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="taches__empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <h3>Aucune tache</h3>
+      <p>Aucune tache ne correspond a ce filtre.</p>
+    </div>
+  }
+</div>

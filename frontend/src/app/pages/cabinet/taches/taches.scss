@@ -1,0 +1,210 @@
+.taches {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+  }
+
+  &__count {
+    padding: 0.25rem 0.75rem;
+    background: #fff3e8;
+    color: #ea580c;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__chip {
+    padding: 0.375rem 0.85rem;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background: white;
+    color: #374151;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      border-color: #9ca3af;
+    }
+
+    &--active {
+      background: #ea580c;
+      border-color: #ea580c;
+      color: white;
+    }
+  }
+
+  &__table-wrapper {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tbody tr:not(:last-child) {
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    td {
+      font-size: 0.95rem;
+      color: #374151;
+    }
+  }
+
+  &__row--done &__cell-main,
+  &__row--done td {
+    color: #9ca3af;
+  }
+
+  &__cell-main {
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  &__col-actions {
+    text-align: right;
+  }
+
+  &__done-btn {
+    padding: 0.4rem 0.85rem;
+    background: white;
+    border: 1px solid #059669;
+    border-radius: 8px;
+    color: #059669;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #059669;
+      color: white;
+    }
+  }
+
+  &__done-label {
+    font-size: 0.82rem;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    background: white;
+    border-radius: 12px;
+    text-align: center;
+
+    svg {
+      width: 64px;
+      height: 64px;
+      color: #d1d5db;
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: #6b7280;
+    }
+  }
+}
+
+// Badge de priorite
+.badge-priorite {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &[data-priorite='HAUTE'] {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  &[data-priorite='NORMALE'] {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  &[data-priorite='BASSE'] {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+}
+
+// Badge de statut cliquable (cycle de statut)
+.badge-statut {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+
+  &:hover {
+    filter: brightness(0.95);
+  }
+
+  &[data-statut='A_FAIRE'] {
+    background: #fff7ed;
+    color: #ea580c;
+  }
+
+  &[data-statut='EN_COURS'] {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  &[data-statut='FAIT'] {
+    background: #ecfdf5;
+    color: #059669;
+  }
+}

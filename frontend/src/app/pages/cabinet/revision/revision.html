@@ -1,0 +1,73 @@
+<div class="revision">
+  <div class="revision__header">
+    <h1>Revision</h1>
+  </div>
+
+  @if (loading()) {
+    <div class="revision__loading">
+      <div class="revision__spinner"></div>
+      <span>Chargement des dossiers...</span>
+    </div>
+  } @else if (loadError()) {
+    <div class="revision__empty">
+      <h3>Dossiers indisponibles</h3>
+      <p>Impossible de charger la liste des dossiers.</p>
+      <button type="button" class="revision__retry" (click)="fetchClients()">Reessayer</button>
+    </div>
+  } @else {
+    <div class="revision__picker">
+      <label for="revision-client">Dossier a reviser</label>
+      <select id="revision-client" (change)="onSelect($any($event.target).value)">
+        <option value="">— Selectionner un dossier —</option>
+        @for (c of clients(); track c.id) {
+          <option [value]="c.id">{{ c.raisonSociale }}</option>
+        }
+      </select>
+    </div>
+
+    @if (selectedClient()) {
+      <div class="revision__progress-global">
+        <div class="revision__progress-head">
+          <span>Progression globale</span>
+          <strong>{{ progress() }}%</strong>
+        </div>
+        <div class="revision__bar">
+          <div class="revision__bar-fill" [style.width.%]="progress()"></div>
+        </div>
+      </div>
+
+      <div class="revision__cycles">
+        @for (cycle of cycles(); track cycle.id) {
+          <section class="revision__cycle">
+            <header class="revision__cycle-head">
+              <h3>{{ cycle.nom }}</h3>
+              <span class="revision__cycle-pct">{{ cycleProgress(cycle) }}%</span>
+            </header>
+            <div class="revision__bar revision__bar--mini">
+              <div class="revision__bar-fill" [style.width.%]="cycleProgress(cycle)"></div>
+            </div>
+            <ul class="revision__points">
+              @for (point of cycle.points; track point.id) {
+                <li class="revision__point">
+                  <label>
+                    <input
+                      type="checkbox"
+                      [checked]="point.valide"
+                      (change)="togglePoint(cycle.id, point.id)"
+                    />
+                    <span [class.revision__point--done]="point.valide">{{ point.label }}</span>
+                  </label>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+    } @else {
+      <div class="revision__empty">
+        <h3>Aucun dossier selectionne</h3>
+        <p>Choisissez un dossier pour demarrer sa revision comptable.</p>
+      </div>
+    }
+  }
+</div>

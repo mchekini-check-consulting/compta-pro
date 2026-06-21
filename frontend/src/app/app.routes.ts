@@ -39,6 +39,14 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/cabinet/taches/taches').then(m => m.Taches)
       },
       {
+        path: 'revision',
+        loadComponent: () => import('./pages/cabinet/revision/revision').then(m => m.Revision)
+      },
+      {
+        path: 'social',
+        loadComponent: () => import('./pages/cabinet/social/social').then(m => m.Social)
+      },
+      {
         path: 'echeancier',
         loadComponent: () => import('./pages/cabinet/echeancier/echeancier').then(m => m.Echeancier)
       },

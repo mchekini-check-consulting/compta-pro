@@ -56,14 +56,67 @@
       color: #1a202c;
     }
 
-    &--active {
-      background: linear-gradient(135deg, #e8f4ff 0%, #dbeafe 100%);
-      color: #0066ff;
-
-      .sidebar__icon {
+    // Couleur d'accent par module (RG-002), appliquee au survol et a l'actif.
+    // Selecteurs d'attribut pour rester coherent avec .badge[data-statut] (clients.scss).
+    &[data-accent='blue'] {
+      &:hover { background: #eef5ff; color: #0066ff; }
+      &.sidebar__item--active {
+        background: linear-gradient(135deg, #e8f4ff 0%, #dbeafe 100%);
         color: #0066ff;
+        .sidebar__icon { color: #0066ff; }
       }
     }
+
+    &[data-accent='orange'] {
+      &:hover { background: #fff7ef; color: #ea580c; }
+      &.sidebar__item--active {
+        background: #fff3e8;
+        color: #ea580c;
+        .sidebar__icon { color: #ea580c; }
+      }
+    }
+
+    &[data-accent='green'] {
+      &:hover { background: #f0fbf5; color: #059669; }
+      &.sidebar__item--active {
+        background: #eafaf1;
+        color: #059669;
+        .sidebar__icon { color: #059669; }
+      }
+    }
+
+    &[data-accent='violet'] {
+      &:hover { background: #f7f4fd; color: #7c3aed; }
+      &.sidebar__item--active {
+        background: #f3effd;
+        color: #7c3aed;
+        .sidebar__icon { color: #7c3aed; }
+      }
+    }
+
+    &[data-accent='gray'] {
+      &:hover { background: #f1f3f5; color: #475569; }
+      &.sidebar__item--active {
+        background: #eef0f3;
+        color: #475569;
+        .sidebar__icon { color: #475569; }
+      }
+    }
+  }
+
+  &__badge {
+    margin-left: auto;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 999px;
   }
 
   &__icon {
