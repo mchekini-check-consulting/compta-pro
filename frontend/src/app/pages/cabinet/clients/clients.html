@@ -104,7 +104,7 @@
     <!-- Grille de cartes (AC-01) -->
     <div class="clients__grid">
       @for (client of displayedClients(); track client.id) {
-        <div class="card" (click)="openViewModal(client)">
+        <div class="card" (click)="openSaisie(client)">
           <div class="card__top">
             <div class="card__avatar" [style.background-color]="avatarColor(client.siren)">
               {{ initials(client.raisonSociale) }}
@@ -129,6 +129,7 @@
 
           <div class="card__footer" (click)="$event.stopPropagation()">
             <app-dossier-nav [client]="client" />
+            <button type="button" class="card__details" (click)="openViewModal(client)">Details</button>
           </div>
         </div>
       }
@@ -433,3 +434,8 @@
 
 <!-- Drawer unique des sections de dossier (TREZ-39) -->
 <app-dossier-drawer />
+
+<!-- Modale de saisie comptable (US-2) -->
+@if (selectedSaisieClient(); as saisieClient) {
+  <app-saisie-modal [client]="saisieClient" (closed)="closeSaisie()" />
+}

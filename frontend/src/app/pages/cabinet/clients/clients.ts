@@ -12,13 +12,14 @@ import {
 
 import { DossierNav } from '../../../components/dossier/dossier-nav/dossier-nav';
 import { DossierDrawer } from '../../../components/dossier/dossier-drawer/dossier-drawer';
+import { SaisieModal } from '../../../components/dossier/saisie-modal/saisie-modal';
 import { TasksStore } from '../../../services/tasks.store';
 import { avatarColor as avatarColorFn, initials as initialsFn, normalizeText as normalize } from '../../../components/dossier/dossier-format';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DossierNav, DossierDrawer],
+  imports: [CommonModule, ReactiveFormsModule, DossierNav, DossierDrawer, SaisieModal],
   templateUrl: './clients.html',
   styleUrl: './clients.scss'
 })
@@ -181,6 +182,17 @@ export class Clients implements OnInit {
     this.selectedStatuts.set([]);
     this.dateDebut.set('');
     this.dateFin.set('');
+  }
+
+  // === Modale de saisie comptable (US-2) ===
+  readonly selectedSaisieClient = signal<Client | null>(null);
+
+  openSaisie(client: Client): void {
+    this.selectedSaisieClient.set(client);
+  }
+
+  closeSaisie(): void {
+    this.selectedSaisieClient.set(null);
   }
 
   // === Avatar (AC-02 / AC-03 / RG-002) ===

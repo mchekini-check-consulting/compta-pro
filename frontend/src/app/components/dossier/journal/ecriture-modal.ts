@@ -31,6 +31,8 @@ interface LigneModel {
 })
 export class EcritureModal implements OnInit {
   @Input({ required: true }) client!: Client;
+  /** Mode embarque (onglet d'une modale parente) : pas d'overlay ni de confirmation interne. */
+  @Input() embedded = false;
   @Output() saved = new EventEmitter<EcritureResponse>();
   @Output() closed = new EventEmitter<void>();
 
@@ -44,7 +46,8 @@ export class EcritureModal implements OnInit {
   numeroOperation = '';
   codeJournal = '';
 
-  lignes: LigneModel[] = [this.emptyLigne()];
+  // AC-07 : au moins 2 lignes vides pre-affichees.
+  lignes: LigneModel[] = [this.emptyLigne(), this.emptyLigne()];
 
   saving = false;
   submitError = '';
@@ -55,10 +58,19 @@ export class EcritureModal implements OnInit {
   private static readonly MONTANT_RE = /^-?\d+(\.\d{1,2})?$/;
 
   ngOnInit(): void {
+    // AC-06 : date pre-remplie avec la date du jour (jj/mm/aaaa).
+    if (!this.dateStr) this.dateStr = this.todayFr();
     this.planService.getComptes().subscribe({
       next: (list) => (this.comptes = list.filter((c) => c.statut === 'ACTIF')),
       error: () => (this.comptes = []),
     });
+  }
+
+  private todayFr(): string {
+    const d = new Date();
+    const jj = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return `${jj}/${mm}/${d.getFullYear()}`;
   }
 
   private emptyLigne(): LigneModel {
@@ -223,9 +235,18 @@ export class EcritureModal implements OnInit {
     return this.isEquilibre();
   }
 
-  /** Y a-t-il une saisie en cours (pour la confirmation de fermeture, RG-017) ? */
-  private hasInput(): boolean {
-    return !!this.dateStr.trim() || this.lignes.some((l) => this.isLigneRenseignee(l));
+  /**
+   * Y a-t-il une saisie en cours (confirmation de fermeture, RG-017 / AC-05) ?
+   * La date etant pre-remplie, on ne considere que le contenu des lignes.
+   */
+  hasInput(): boolean {
+    return this.lignes.some((l) => this.isLigneRenseignee(l));
+  }
+
+  /** Tooltip du bouton Enregistrer desactive quand l'ecriture est desequilibree (AC-09). */
+  ecartTooltip(): string {
+    if (this.ecart() === 0) return '';
+    return `Ecriture desequilibree — ecart de ${this.ecart().toFixed(2)} €`;
   }
 
   // === Enregistrement (RG-015) ===

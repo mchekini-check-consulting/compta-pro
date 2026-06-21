@@ -1,0 +1,41 @@
+<div class="balance">
+  @if (loading) {
+    <p class="balance__loading">Chargement de la balance...</p>
+  } @else if (!data || data.comptes.length === 0) {
+    <p class="balance__empty">Aucun mouvement comptable pour ce dossier.</p>
+  } @else {
+    <table class="balance__table">
+      <thead>
+        <tr>
+          <th>N° compte</th>
+          <th>Libelle</th>
+          <th class="balance__num">Total debit</th>
+          <th class="balance__num">Total credit</th>
+          <th class="balance__num">Solde debiteur</th>
+          <th class="balance__num">Solde crediteur</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (compte of data.comptes; track trackCompte($index, compte)) {
+          <tr>
+            <td class="balance__numero">{{ compte.numeroCompte }}</td>
+            <td>{{ compte.libelleCompte }}</td>
+            <td class="balance__num">{{ compte.totalDebit.toFixed(2) }}</td>
+            <td class="balance__num">{{ compte.totalCredit.toFixed(2) }}</td>
+            <td class="balance__num">{{ compte.solde > 0 ? compte.solde.toFixed(2) : '' }}</td>
+            <td class="balance__num">{{ compte.solde < 0 ? (-compte.solde).toFixed(2) : '' }}</td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2">Totaux</td>
+          <td class="balance__num">{{ data.totalDebit.toFixed(2) }}</td>
+          <td class="balance__num">{{ data.totalCredit.toFixed(2) }}</td>
+          <td class="balance__num">{{ totalSoldeDebiteur().toFixed(2) }}</td>
+          <td class="balance__num">{{ totalSoldeCrediteur().toFixed(2) }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  }
+</div>

@@ -1,0 +1,109 @@
+<div class="saisie-modal__overlay" (click)="attemptClose()">
+  <div class="saisie-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+    <!-- En-tete : identite + 4 icones d'acces rapide (AC-01 / AC-02) -->
+    <header class="saisie-modal__header">
+      <button type="button" class="saisie-modal__back" (click)="attemptClose()">‹ Retour</button>
+
+      <div class="saisie-modal__identity">
+        <div class="saisie-modal__avatar" [style.background-color]="avatarColor()">{{ initials() }}</div>
+        <div class="saisie-modal__id-text">
+          <h2>{{ client.raisonSociale }}</h2>
+          <div class="saisie-modal__id-meta">
+            <span>SIREN {{ sirenFmt() }}</span>
+            <span>•</span>
+            <span>Regime {{ regimeFiscalLabel() }}</span>
+            <span>•</span>
+            <span>{{ regimeTVALabel() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="saisie-modal__quick">
+        <button type="button" class="saisie-modal__icon" [class.active]="actif() === 'journal'"
+                title="Journal" (click)="select('journal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M4 5a2 2 0 012-2h12a1 1 0 011 1v15a1 1 0 01-1 1H6a2 2 0 01-2-2z" />
+            <path d="M8 7h7M8 11h7M8 15h4" stroke-linecap="round" />
+          </svg>
+        </button>
+        <button type="button" class="saisie-modal__icon" [class.active]="actif() === 'grand-livre'"
+                title="Grand livre" (click)="select('grand-livre')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M3 6a2 2 0 012-2h11a1 1 0 011 1v13a1 1 0 01-1 1H5a2 2 0 01-2-2z" />
+            <path d="M7 4v14" />
+            <path d="M20 7v13a1 1 0 01-1 1h-2" stroke-linecap="round" />
+          </svg>
+        </button>
+        <button type="button" class="saisie-modal__icon" [class.active]="actif() === 'balance'"
+                title="Balance" (click)="select('balance')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M12 3v18M5 7h14M5 21h14" stroke-linecap="round" />
+            <path d="M5 7l-3 6a3 3 0 006 0zM19 7l-3 6a3 3 0 006 0z" />
+          </svg>
+        </button>
+        <button type="button" class="saisie-modal__icon" title="Export FEC" (click)="downloadFec()" [disabled]="fecDownloading">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M12 4v11m0 0l-4-4m4 4l4-4" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4 19h16" stroke-linecap="round" />
+          </svg>
+        </button>
+
+        <button type="button" class="saisie-modal__close" aria-label="Fermer" (click)="attemptClose()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Onglets internes (AC-03) -->
+    <nav class="saisie-modal__tabs" role="tablist">
+      @for (o of onglets; track o.key) {
+        <button
+          type="button"
+          role="tab"
+          class="saisie-modal__tab"
+          [class.saisie-modal__tab--active]="actif() === o.key"
+          [attr.aria-selected]="actif() === o.key"
+          (click)="select(o.key)"
+        >
+          {{ o.label }}
+        </button>
+      }
+    </nav>
+
+    @if (savedToast()) {
+      <div class="saisie-modal__toast">{{ savedToast() }}</div>
+    }
+
+    <!-- Panels : tous montes, masques selon l'onglet (RG-005 / AC-12) -->
+    <div class="saisie-modal__body">
+      <div class="saisie-modal__panel" [hidden]="actif() !== 'nouvelle'">
+        <app-ecriture-modal #ecr [client]="client" [embedded]="true" (saved)="onSaved($event)" />
+      </div>
+      <div class="saisie-modal__panel" [hidden]="actif() !== 'journal'">
+        <app-journal-comptable [client]="client" />
+      </div>
+      <div class="saisie-modal__panel" [hidden]="actif() !== 'grand-livre'">
+        <app-grand-livre [client]="client" />
+      </div>
+      <div class="saisie-modal__panel" [hidden]="actif() !== 'balance'">
+        <app-balance [client]="client" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation si saisie en cours (AC-05 / RG-003) -->
+@if (showConfirmAbandon()) {
+  <div class="saisie-modal__overlay saisie-modal__overlay--confirm" (click)="cancelAbandon()">
+    <div class="saisie-modal__confirm" (click)="$event.stopPropagation()">
+      <h3>Abandonner la saisie en cours ?</h3>
+      <p>Les donnees saisies dans "Nouvelle ecriture" seront perdues.</p>
+      <div class="saisie-modal__confirm-actions">
+        <button type="button" class="saisie-modal__btn-cancel" (click)="cancelAbandon()">Continuer la saisie</button>
+        <button type="button" class="saisie-modal__btn-danger" (click)="confirmAbandon()">Abandonner</button>
+      </div>
+    </div>
+  </div>
+}
