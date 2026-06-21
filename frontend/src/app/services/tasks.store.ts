@@ -60,6 +60,13 @@ export class TasksStore {
     () => this._taches().filter((t) => t.statut !== 'FAIT').length
   );
 
+  /** Nombre de taches en attente pour un dossier donne (indicateur carte, AC-07). */
+  pendingForClient(clientId: number): number {
+    return this._taches().filter(
+      (t) => t.clientId === clientId && t.statut !== 'FAIT'
+    ).length;
+  }
+
   /**
    * Charge les dossiers reels puis synchronise les taches. Idempotent : une seule
    * synchro reseau par session (sauf `force`), pour ne pas refetch a chaque page.

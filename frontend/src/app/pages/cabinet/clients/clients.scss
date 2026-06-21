@@ -92,70 +92,96 @@
     }
   }
 
-  &__table-wrapper {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+// Grille de cartes du portefeuille (AC-01) : 3 col desktop, 2 tablette, 1 mobile
+.clients__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  &__table {
-    width: 100%;
-    border-collapse: collapse;
-
-    th, td {
-      padding: 1rem 1.25rem;
-      text-align: left;
-    }
-
-    th {
-      background: #f8fafc;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    tbody tr {
-      cursor: pointer;
-      transition: background 0.15s ease;
-
-      &:hover {
-        background: #f8fafc;
-      }
-
-      &:not(:last-child) {
-        border-bottom: 1px solid #f1f5f9;
-      }
-    }
-
-    td {
-      font-size: 0.95rem;
-      color: #374151;
-    }
-  }
-
-  &__cell-main {
-    font-weight: 600;
-    color: #1a1a2e !important;
-  }
-
-  // Statut + icones de navigation alignes horizontalement (AC-02)
-  &__cell-statut {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
   }
 }
 
-// RG-007 : sur mobile, les icones passent sous le badge de statut
-@media (max-width: 768px) {
-  .clients__cell-statut {
+// Carte client (AC-02 / AC-08)
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: white;
+  border: 1px solid #e8eaed;
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    border-color: #0066ff;
+    box-shadow: 0 6px 18px rgba(0, 102, 255, 0.12);
+    transform: translateY(-2px);
+  }
+
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    line-height: 1.3;
+  }
+
+  &__meta {
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    gap: 0.2rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+
+  &__forme {
+    font-weight: 500;
+    color: #4a5568;
+  }
+
+  // Indicateur de taches en attente (AC-07)
+  &__taches {
+    align-self: flex-start;
+    padding: 0.3rem 0.7rem;
+    background: #fff7ed;
+    color: #ea580c;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  &__footer {
+    margin-top: 0.25rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
   }
 }
 
@@ -167,41 +193,80 @@
   margin-bottom: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
+  // Barre de recherche unique (AC-04)
+  &__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    transition: all 0.15s ease;
+
+    &:focus-within {
+      border-color: #0066ff;
+      box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      color: #9ca3af;
+      flex-shrink: 0;
+    }
+
+    input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 0.95rem;
+      color: #1a1a2e;
+      background: transparent;
+
+      &::placeholder {
+        color: #9ca3af;
+      }
+    }
   }
 
-  &__field {
+  &__clear-icon {
     display: flex;
-    flex-direction: column;
+    background: none;
+    border: none;
+    padding: 0.2rem;
+    cursor: pointer;
+    color: #9ca3af;
+    border-radius: 6px;
+
+    svg { width: 16px; height: 16px; }
+
+    &:hover {
+      background: #f3f4f6;
+      color: #374151;
+    }
+  }
+
+  &__dates {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: auto;
 
     label {
       font-size: 0.8rem;
-      font-weight: 500;
       color: #6b7280;
-      margin-bottom: 0.375rem;
     }
 
-    input,
-    select {
-      width: 100%;
-      padding: 0.6rem 0.85rem;
+    input {
+      padding: 0.35rem 0.5rem;
       border: 1px solid #d1d5db;
       border-radius: 8px;
-      font-size: 0.9rem;
-      transition: all 0.15s ease;
+      font-size: 0.85rem;
 
       &:focus {
         outline: none;
         border-color: #0066ff;
-        box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
       }
-    }
-
-    select {
-      cursor: pointer;
     }
   }
 

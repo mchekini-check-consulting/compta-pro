@@ -1,6 +1,6 @@
 <div class="clients">
   <div class="clients__header">
-    <h1>Dossiers / Clients</h1>
+    <h1>Portefeuille clients</h1>
     <button class="clients__btn-create" (click)="openCreateModal()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 5v14M5 12h14" />
@@ -9,38 +9,26 @@
     </button>
   </div>
 
-  <!-- Panneau de recherche multi-critere (AC-01) -->
-  <form class="search" [formGroup]="searchForm">
-    <div class="search__grid">
-      <div class="search__field">
-        <label>Raison sociale</label>
-        <input type="text" formControlName="raisonSociale" placeholder="Rechercher..." />
-      </div>
-
-      <div class="search__field">
-        <label>SIREN</label>
-        <input type="text" formControlName="siren" placeholder="9 chiffres" maxlength="9" />
-      </div>
-
-      <div class="search__field">
-        <label>Forme juridique</label>
-        <select formControlName="formeJuridique">
-          <option value="">Toutes</option>
-          @for (forme of formesJuridiques; track forme.value) {
-            <option [value]="forme.value">{{ forme.label }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="search__field">
-        <label>Date de creation (du)</label>
-        <input type="date" formControlName="dateDebut" />
-      </div>
-
-      <div class="search__field">
-        <label>Date de creation (au)</label>
-        <input type="date" formControlName="dateFin" />
-      </div>
+  <!-- Barre de recherche unique : raison sociale / SIREN / forme juridique (AC-04, RG-003) -->
+  <div class="search">
+    <div class="search__bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
+      </svg>
+      <input
+        type="text"
+        placeholder="Rechercher par nom de societe, SIREN ou forme juridique..."
+        [value]="searchTerm()"
+        (input)="onSearchInput($any($event.target).value)"
+      />
+      @if (searchTerm()) {
+        <button type="button" class="search__clear-icon" (click)="clearSearch()" aria-label="Effacer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      }
     </div>
 
     <div class="search__statuts">
@@ -56,18 +44,21 @@
           {{ s.label }}
         </button>
       }
-    </div>
 
-    @if (dateRangeError) {
-      <div class="search__error">{{ dateRangeError }}</div>
-    }
+      <span class="search__dates">
+        <label>Cree du</label>
+        <input type="date" [value]="dateDebut()" (change)="dateDebut.set($any($event.target).value)" />
+        <label>au</label>
+        <input type="date" [value]="dateFin()" (change)="dateFin.set($any($event.target).value)" />
+      </span>
+    </div>
 
     <div class="search__footer">
       <span class="search__counter">
         @if (hasActiveFilters()) {
-          {{ filteredCount }} dossier{{ filteredCount > 1 ? 's' : '' }} sur {{ total }}
+          {{ filteredCount() }} dossier{{ filteredCount() > 1 ? 's' : '' }} sur {{ total() }}
         } @else {
-          {{ total }} dossier{{ total > 1 ? 's' : '' }}
+          {{ total() }} dossier{{ total() > 1 ? 's' : '' }}
         }
       </span>
       @if (hasActiveFilters()) {
@@ -76,26 +67,32 @@
         </button>
       }
     </div>
-  </form>
+  </div>
 
-  @if (isLoading) {
+  @if (isLoading()) {
     <div class="clients__loading">
       <div class="clients__spinner"></div>
       <span>Chargement des dossiers...</span>
     </div>
-  } @else if (clients.length === 0 && hasActiveFilters()) {
-    <!-- AC-12 : aucun resultat -->
+  } @else if (loadError()) {
+    <div class="clients__empty">
+      <h3>Dossiers indisponibles</h3>
+      <p>Impossible de charger la liste des dossiers.</p>
+      <button type="button" class="search__reset" (click)="reloadClients()">Reessayer</button>
+    </div>
+  } @else if (displayedClients().length === 0 && hasActiveFilters()) {
+    <!-- AC-06 : aucun resultat -->
     <div class="clients__empty">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <circle cx="11" cy="11" r="7" />
         <path d="M21 21l-4.3-4.3" />
       </svg>
-      <h3>Aucun dossier trouve pour ces criteres</h3>
+      <h3>Aucun client trouve pour cette recherche</h3>
       <button type="button" class="search__reset" (click)="resetFilters()">
-        Reinitialiser les filtres
+        Effacer la recherche
       </button>
     </div>
-  } @else if (clients.length === 0) {
+  } @else if (displayedClients().length === 0) {
     <div class="clients__empty">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
@@ -104,37 +101,37 @@
       <p>Creez votre premier dossier client pour commencer.</p>
     </div>
   } @else {
-    <div class="clients__table-wrapper">
-      <table class="clients__table">
-        <thead>
-          <tr>
-            <th>Raison sociale</th>
-            <th>SIREN</th>
-            <th>Forme juridique</th>
-            <th>Statut</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (client of clients; track client.id) {
-            <tr (click)="openViewModal(client)">
-              <td class="clients__cell-main">{{ client.raisonSociale }}</td>
-              <td>{{ client.siren }}</td>
-              <td>{{ getFormeJuridiqueLabel(client.formeJuridique) }}</td>
-              <td>
-                <!-- Statut + 3 icones de navigation (AC-01/AC-02) -->
-                <div class="clients__cell-statut">
-                  @if (client.statut) {
-                    <span class="badge" [attr.data-statut]="client.statut">
-                      {{ getStatutLabel(client.statut) }}
-                    </span>
-                  }
-                  <app-dossier-nav [client]="client" />
-                </div>
-              </td>
-            </tr>
+    <!-- Grille de cartes (AC-01) -->
+    <div class="clients__grid">
+      @for (client of displayedClients(); track client.id) {
+        <div class="card" (click)="openViewModal(client)">
+          <div class="card__top">
+            <div class="card__avatar" [style.background-color]="avatarColor(client.siren)">
+              {{ initials(client.raisonSociale) }}
+            </div>
+            <span class="badge" [attr.data-statut]="client.statut">
+              {{ getStatutLabel(client.statut) }}
+            </span>
+          </div>
+
+          <h3 class="card__name">{{ client.raisonSociale }}</h3>
+          <div class="card__meta">
+            <span class="card__siren">SIREN {{ client.siren }}</span>
+            <span class="card__forme">{{ getFormeJuridiqueLabel(client.formeJuridique) }}</span>
+          </div>
+
+          @if (pendingForClient(client.id) > 0) {
+            <!-- AC-07 : indicateur orange + tri en premier -->
+            <div class="card__taches">
+              {{ pendingForClient(client.id) }} tache{{ pendingForClient(client.id) > 1 ? 's' : '' }} en attente
+            </div>
           }
-        </tbody>
-      </table>
+
+          <div class="card__footer" (click)="$event.stopPropagation()">
+            <app-dossier-nav [client]="client" />
+          </div>
+        </div>
+      }
     </div>
   }
 </div>

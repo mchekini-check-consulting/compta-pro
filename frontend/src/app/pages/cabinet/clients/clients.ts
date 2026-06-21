@@ -1,8 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
 import {
   ClientService,
   Client,
@@ -10,11 +8,12 @@ import {
   RegimeTVA,
   FormeJuridique,
   StatutDossier,
-  ClientSearchCriteria,
 } from '../../../services/client';
 
 import { DossierNav } from '../../../components/dossier/dossier-nav/dossier-nav';
 import { DossierDrawer } from '../../../components/dossier/dossier-drawer/dossier-drawer';
+import { TasksStore } from '../../../services/tasks.store';
+import { avatarColor as avatarColorFn, initials as initialsFn, normalizeText as normalize } from '../../../components/dossier/dossier-format';
 
 @Component({
   selector: 'app-clients',
@@ -24,25 +23,56 @@ import { DossierDrawer } from '../../../components/dossier/dossier-drawer/dossie
   styleUrl: './clients.scss'
 })
 export class Clients implements OnInit {
-  clients: Client[] = [];
-  isLoading = true;
+  private tasksStore = inject(TasksStore);
 
-  // Recherche / filtres
-  searchForm: FormGroup;
-  selectedStatuts: StatutDossier[] = [];
-  total = 0;
-  filteredCount = 0;
-  dateRangeError = '';
-  private readonly filterChanged$ = new Subject<void>();
-  private static readonly FILTERS_KEY = 'clients.filters';
+  // === Liste / recherche (filtrage cote client) ===
+  readonly allClients = signal<Client[]>([]);
+  readonly isLoading = signal(true);
+  readonly loadError = signal(false);
 
-  // Modal creation
+  readonly searchTerm = signal('');
+  readonly selectedStatuts = signal<StatutDossier[]>([]);
+  readonly dateDebut = signal('');
+  readonly dateFin = signal('');
+
+  /** Dossiers filtres puis tries (tâches en attente d'abord, puis alphabetique). RG-001. */
+  readonly displayedClients = computed(() => {
+    const term = normalize(this.searchTerm());
+    const statuts = this.selectedStatuts();
+    const debut = this.dateDebut();
+    const fin = this.dateFin();
+
+    const filtered = this.allClients().filter((c) => {
+      // Recherche : raison sociale + SIREN + forme juridique (RG-003 / AC-04 / AC-05)
+      if (term) {
+        const haystack = normalize(
+          `${c.raisonSociale} ${c.siren} ${this.getFormeJuridiqueLabel(c.formeJuridique)}`
+        );
+        if (!haystack.includes(term)) return false;
+      }
+      if (statuts.length && !statuts.includes(c.statut)) return false;
+      if (debut && c.dateImmatriculation < debut) return false;
+      if (fin && c.dateImmatriculation > fin) return false;
+      return true;
+    });
+
+    return [...filtered].sort((a, b) => {
+      const pa = this.pendingForClient(a.id);
+      const pb = this.pendingForClient(b.id);
+      if (pa !== pb) return pb - pa; // tâches en attente en premier
+      return a.raisonSociale.localeCompare(b.raisonSociale, 'fr');
+    });
+  });
+
+  readonly total = computed(() => this.allClients().length);
+  readonly filteredCount = computed(() => this.displayedClients().length);
+
+  // === Modales (creation / consultation / edition) ===
   showCreateModal = false;
   createForm: FormGroup;
   isCreating = false;
   createError = '';
 
-  // Modal view/edit
   showViewModal = false;
   selectedClient: Client | null = null;
   editForm: FormGroup;
@@ -87,21 +117,10 @@ export class Clients implements OnInit {
   ) {
     this.createForm = this.createClientForm();
     this.editForm = this.createClientForm();
-    this.searchForm = this.fb.group({
-      raisonSociale: [''],
-      siren: [''],
-      formeJuridique: [''],
-      dateDebut: [''],
-      dateFin: ['']
-    });
   }
 
   ngOnInit(): void {
-    this.restoreFilters();
-    // Recherche temps reel : on debounce a 300ms (mise a jour < 500ms, AC-11/RG-007)
-    this.filterChanged$.pipe(debounceTime(300)).subscribe(() => this.performSearch());
-    this.searchForm.valueChanges.subscribe(() => this.onFilterChange());
-    this.performSearch();
+    this.reloadClients();
   }
 
   private createClientForm(): FormGroup {
@@ -118,97 +137,63 @@ export class Clients implements OnInit {
     });
   }
 
-  // === RECHERCHE / FILTRES ===
-  private buildCriteria(): ClientSearchCriteria {
-    const v = this.searchForm.value;
-    return {
-      raisonSociale: v.raisonSociale || undefined,
-      siren: v.siren || undefined,
-      formeJuridique: v.formeJuridique || undefined,
-      statuts: this.selectedStatuts.length ? this.selectedStatuts : undefined,
-      dateDebut: v.dateDebut || undefined,
-      dateFin: v.dateFin || undefined
-    };
-  }
-
-  performSearch(): void {
-    // AC-09 : date de debut posterieure a la date de fin -> message, liste non mise a jour
-    const { dateDebut, dateFin } = this.searchForm.value;
-    if (dateDebut && dateFin && new Date(dateDebut) > new Date(dateFin)) {
-      this.dateRangeError = 'La date de debut doit etre anterieure a la date de fin';
-      return;
-    }
-    this.dateRangeError = '';
-
-    this.clientService.searchClients(this.buildCriteria()).subscribe({
-      next: (res) => {
-        this.clients = res.clients;
-        this.filteredCount = res.count;
-        this.total = res.total;
-        this.isLoading = false;
+  // === Chargement ===
+  reloadClients(): void {
+    this.isLoading.set(true);
+    this.loadError.set(false);
+    this.clientService.getClients().subscribe({
+      next: (list) => {
+        this.allClients.set(list);
+        this.isLoading.set(false);
       },
       error: () => {
-        this.isLoading = false;
-      }
+        this.loadError.set(true);
+        this.isLoading.set(false);
+      },
     });
   }
 
-  private onFilterChange(): void {
-    this.persistFilters();
-    this.filterChanged$.next();
+  // === Recherche / filtres ===
+  onSearchInput(value: string): void {
+    this.searchTerm.set(value);
+  }
+
+  clearSearch(): void {
+    this.searchTerm.set('');
   }
 
   toggleStatut(statut: StatutDossier): void {
-    const index = this.selectedStatuts.indexOf(statut);
-    if (index >= 0) {
-      this.selectedStatuts.splice(index, 1);
-    } else {
-      this.selectedStatuts.push(statut);
-    }
-    this.onFilterChange();
+    this.selectedStatuts.update((list) =>
+      list.includes(statut) ? list.filter((s) => s !== statut) : [...list, statut]
+    );
   }
 
   isStatutSelected(statut: StatutDossier): boolean {
-    return this.selectedStatuts.includes(statut);
+    return this.selectedStatuts().includes(statut);
   }
 
   hasActiveFilters(): boolean {
-    const v = this.searchForm.value;
-    return !!(v.raisonSociale || v.siren || v.formeJuridique || v.dateDebut || v.dateFin
-      || this.selectedStatuts.length);
+    return !!(this.searchTerm() || this.selectedStatuts().length || this.dateDebut() || this.dateFin());
   }
 
   resetFilters(): void {
-    this.selectedStatuts = [];
-    this.dateRangeError = '';
-    // reset sans emettre pour eviter une recherche intermediaire, puis une seule recherche
-    this.searchForm.reset(
-      { raisonSociale: '', siren: '', formeJuridique: '', dateDebut: '', dateFin: '' },
-      { emitEvent: false }
-    );
-    this.persistFilters();
-    this.performSearch();
+    this.searchTerm.set('');
+    this.selectedStatuts.set([]);
+    this.dateDebut.set('');
+    this.dateFin.set('');
   }
 
-  private persistFilters(): void {
-    const state = { form: this.searchForm.value, statuts: this.selectedStatuts };
-    sessionStorage.setItem(Clients.FILTERS_KEY, JSON.stringify(state));
+  // === Avatar (AC-02 / AC-03 / RG-002) ===
+  pendingForClient(clientId: number): number {
+    return this.tasksStore.pendingForClient(clientId);
   }
 
-  private restoreFilters(): void {
-    const raw = sessionStorage.getItem(Clients.FILTERS_KEY);
-    if (!raw) return;
-    try {
-      const state = JSON.parse(raw);
-      if (state.form) {
-        this.searchForm.patchValue(state.form, { emitEvent: false });
-      }
-      if (Array.isArray(state.statuts)) {
-        this.selectedStatuts = state.statuts;
-      }
-    } catch {
-      // etat corrompu : on ignore
-    }
+  initials(raisonSociale: string): string {
+    return initialsFn(raisonSociale);
+  }
+
+  avatarColor(siren: string): string {
+    return avatarColorFn(siren);
   }
 
   // === CREATE MODAL ===
@@ -257,8 +242,7 @@ export class Clients implements OnInit {
       next: () => {
         this.isCreating = false;
         this.closeCreateModal();
-        // re-applique les filtres courants pour refleter le nouvel etat (tri + compteur)
-        this.performSearch();
+        this.reloadClients();
       },
       error: (error) => {
         this.isCreating = false;
@@ -326,9 +310,7 @@ export class Clients implements OnInit {
         this.selectedClient = updatedClient;
         this.isEditMode = false;
         this.hasChanges = false;
-
-        // re-applique les filtres pour garder la liste coherente (tri, statut, etc.)
-        this.performSearch();
+        this.reloadClients();
 
         setTimeout(() => {
           this.updateSuccess = false;
