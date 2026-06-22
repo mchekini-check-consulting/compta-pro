@@ -90,6 +90,9 @@
       <div class="saisie-modal__panel" [hidden]="actif() !== 'balance'">
         <app-balance [client]="client" />
       </div>
+      <div class="saisie-modal__panel" [hidden]="actif() !== 'cadrage'">
+        <app-cadrage-tva [client]="client" (genererCloture)="onGenererCloture($event)" />
+      </div>
     </div>
   </div>
 </div>

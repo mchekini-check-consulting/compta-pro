@@ -17,8 +17,10 @@ import { EcritureModal } from '../journal/ecriture-modal';
 import { JournalComptable } from '../journal/journal-comptable';
 import { GrandLivre } from '../saisie-comptable/grand-livre';
 import { Balance } from '../saisie-comptable/balance';
+import { CadrageTvaComponent } from '../saisie-comptable/cadrage-tva';
+import { LigneEcritureRequest } from '../../../services/journal';
 
-type Onglet = 'nouvelle' | 'journal' | 'grand-livre' | 'balance';
+type Onglet = 'nouvelle' | 'journal' | 'grand-livre' | 'balance' | 'cadrage';
 
 /**
  * Fenetre modale unifiee de saisie comptable d'un dossier (US-2).
@@ -31,7 +33,7 @@ type Onglet = 'nouvelle' | 'journal' | 'grand-livre' | 'balance';
 @Component({
   selector: 'app-saisie-modal',
   standalone: true,
-  imports: [CommonModule, EcritureModal, JournalComptable, GrandLivre, Balance],
+  imports: [CommonModule, EcritureModal, JournalComptable, GrandLivre, Balance, CadrageTvaComponent],
   templateUrl: './saisie-modal.html',
   styleUrl: './saisie-modal.scss',
 })
@@ -43,6 +45,7 @@ export class SaisieModal {
   @ViewChild(JournalComptable) journal?: JournalComptable;
   @ViewChild(GrandLivre) grandLivre?: GrandLivre;
   @ViewChild(Balance) balance?: Balance;
+  @ViewChild(CadrageTvaComponent) cadrage?: CadrageTvaComponent;
 
   private fecService = inject(FecService);
 
@@ -56,6 +59,7 @@ export class SaisieModal {
     { key: 'journal', label: 'Journal' },
     { key: 'grand-livre', label: 'Grand livre' },
     { key: 'balance', label: 'Balance' },
+    { key: 'cadrage', label: 'Cadrage TVA' },
   ];
 
   private static readonly REGIME_FISCAL: Record<RegimeFiscal, string> = { IR: 'IR', IS: 'IS' };
@@ -89,12 +93,20 @@ export class SaisieModal {
 
   onSaved(_: EcritureResponse): void {
     this.savedToast.set('Ecriture enregistree en brouillon');
-    // Transpose l'ecriture directement sur le Journal, le Grand livre et la Balance.
+    // Transpose l'ecriture directement sur le Journal, le Grand livre, la Balance et le cadrage.
     this.journal?.reload();
     this.grandLivre?.reload();
     this.balance?.reload();
+    this.cadrage?.reload();
     this.actif.set('journal');
     setTimeout(() => this.savedToast.set(''), 3000);
+  }
+
+  /** Generation de l'ecriture de cloture TVA (AC-07) : pre-remplit l'onglet Nouvelle ecriture. */
+  onGenererCloture(e: { lignes: LigneEcritureRequest[]; date: string }): void {
+    this.actif.set('nouvelle');
+    // Attend le prochain cycle pour que le panneau "nouvelle" soit visible.
+    setTimeout(() => this.ecr?.prefill(e.lignes, e.date), 0);
   }
 
   // === Export FEC (icone d'en-tete) ===

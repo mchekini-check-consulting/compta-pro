@@ -160,7 +160,9 @@
 445;Etat - Taxes sur le chiffre d'affaires;4;3;
 4452;TVA due intracommunautaire;4;4;
 4455;Taxes sur le chiffre d'affaires a decaisser;4;4;
+44551;TVA a decaisser;4;5;
 4456;Taxes sur le chiffre d'affaires deductibles;4;4;
+44567;Credit de TVA a reporter;4;5;
 44562;TVA deductible sur immobilisations;4;5;
 44566;TVA deductible sur autres biens et services;4;5;
 4457;Taxes sur le chiffre d'affaires collectees par l'entreprise;4;4;

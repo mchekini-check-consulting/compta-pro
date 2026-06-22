@@ -164,6 +164,33 @@ export class EcritureModal implements OnInit {
     if (this.genere && !this.gabaritActif) this.genererAssiste();
   }
 
+  /**
+   * Pre-remplit le formulaire avec des lignes fournies (ecriture de cloture TVA).
+   * Lignes editables (non auto) : l'expert n'a plus qu'a valider.
+   */
+  prefill(lignes: { numeroCompte: string; libelle: string; debit: number | null; credit: number | null }[], dateFr?: string): void {
+    if (dateFr) this.dateStr = dateFr;
+    this.gabaritActif = null;
+    this.gabaritAlertes = [];
+    this.genere = false;
+    this.numeroOperation = '';
+    this.codeJournal = '';
+    this.lignes = lignes.map((g): LigneModel => {
+      const ref = this.comptes.find((c) => c.numeroCompte === g.numeroCompte);
+      return {
+        compteInput: g.numeroCompte,
+        numeroCompte: g.numeroCompte,
+        libelleCompte: ref?.intitule ?? '',
+        libelle: g.libelle,
+        debit: g.debit != null ? g.debit.toFixed(2) : '',
+        credit: g.credit != null ? g.credit.toFixed(2) : '',
+        showDropdown: false,
+        auto: false,
+      };
+    });
+    this.maybeGenerateNumero(this.lignes[0]?.numeroCompte ?? '');
+  }
+
   // === Bibliotheque de gabarits (TREZ — gabarits prédéfinis + personnalises) ===
   showLibrary = false;
   showBuilder = false;

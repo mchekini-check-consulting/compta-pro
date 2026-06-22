@@ -1,0 +1,93 @@
+<div class="cadrage">
+  <div class="cadrage__head">
+    <h3>Cadrage TVA — CA3</h3>
+    <div class="cadrage__periode">
+      <label>Période</label>
+      <select (change)="onPeriodeChange($any($event.target).value)">
+        @for (p of periodes(); track p.label; let i = $index) {
+          <option [value]="i" [selected]="i === periodeIndex()">{{ p.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="cadrage__loading">Calcul du cadrage...</p>
+  } @else if (cadrage(); as c) {
+    <!-- Anomalies d'imputation (AC-11) -->
+    @for (a of c.anomalies; track $index) {
+      <div class="cadrage__alerte">⚠ {{ a.message }} ({{ a.numeroOperation }})</div>
+    }
+
+    <div class="cadrage__grid">
+      <!-- TVA collectee -->
+      <section class="cadrage__card">
+        <h4>TVA collectée (44571)</h4>
+        <table class="cadrage__table">
+          <thead><tr><th>Taux</th><th class="num">Base HT</th><th class="num">TVA</th></tr></thead>
+          <tbody>
+            @for (t of c.collecteeParTaux; track t.taux) {
+              <tr><td>{{ t.taux }} %</td><td class="num">{{ t.baseHT.toFixed(2) }}</td><td class="num">{{ t.montantTva.toFixed(2) }}</td></tr>
+            } @empty {
+              <tr><td colspan="3" class="cadrage__empty">Aucune vente sur la période</td></tr>
+            }
+          </tbody>
+          <tfoot><tr><td>Total</td><td></td><td class="num">{{ c.collectee.toFixed(2) }} €</td></tr></tfoot>
+        </table>
+      </section>
+
+      <!-- TVA deductible -->
+      <section class="cadrage__card">
+        <h4>TVA déductible (44566 / 44562)</h4>
+        <table class="cadrage__table">
+          <thead><tr><th>Taux</th><th class="num">Base HT</th><th class="num">TVA</th></tr></thead>
+          <tbody>
+            @for (t of c.deductibleParTaux; track t.taux) {
+              <tr><td>{{ t.taux }} %</td><td class="num">{{ t.baseHT.toFixed(2) }}</td><td class="num">{{ t.montantTva.toFixed(2) }}</td></tr>
+            } @empty {
+              <tr><td colspan="3" class="cadrage__empty">Aucun achat sur la période</td></tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr><td>Dont immobilisations (44562)</td><td></td><td class="num">{{ c.deductibleImmo.toFixed(2) }}</td></tr>
+            <tr><td>Total</td><td></td><td class="num">{{ c.deductible.toFixed(2) }} €</td></tr>
+          </tfoot>
+        </table>
+      </section>
+    </div>
+
+    <!-- TVA nette + statut -->
+    <div class="cadrage__net" [attr.data-statut]="c.statut">
+      <div class="cadrage__net-main">
+        <span class="cadrage__net-label">TVA nette</span>
+        <span class="cadrage__net-value">{{ abs(c.nette).toFixed(2) }} €</span>
+      </div>
+      @if (c.statut === 'DECAISSER') {
+        <span class="cadrage__badge cadrage__badge--decaisser">À décaisser → {{ c.compteDestination }}</span>
+      } @else {
+        <span class="cadrage__badge cadrage__badge--credit">Crédit de TVA → {{ c.compteDestination }}</span>
+        <span class="cadrage__report">à reporter sur la prochaine CA3 ou demander remboursement</span>
+      }
+    </div>
+
+    <!-- Controle de coherence (AC-06 / RG-007) -->
+    <div class="cadrage__coherence" [class.ko]="!c.coherenceOk">
+      @if (c.coherenceOk) {
+        ✓ Comptes cohérents (solde 44571 = TVA collectée)
+      } @else {
+        ⚠ Écart de {{ c.ecartCoherence.toFixed(2) }} € — vérifier les écritures
+      }
+    </div>
+
+    <!-- Generation de l'ecriture de cloture (AC-07/08) -->
+    <div class="cadrage__actions">
+      @if (c.clotureExistante) {
+        <p class="cadrage__deja">Une écriture de clôture TVA existe déjà pour cette période — {{ c.clotureExistante }}</p>
+      } @else if (c.collectee > 0 || c.deductible > 0) {
+        <button type="button" class="cadrage__btn" (click)="onGenererCloture()">Générer l'écriture de clôture TVA</button>
+      }
+    </div>
+  } @else {
+    <p class="cadrage__empty">Aucune donnée pour cette période.</p>
+  }
+</div>

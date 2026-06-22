@@ -1,6 +1,8 @@
 package com.comptapro.config;
 
 import com.comptapro.dto.PlanComptableImportResult;
+import com.comptapro.model.CompteComptable;
+import com.comptapro.model.CompteStatut;
 import com.comptapro.repository.CompteComptableRepository;
 import com.comptapro.service.PlanComptableImportService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * Charge le Plan Comptable General en base au demarrage de l'application,
@@ -32,11 +35,18 @@ public class PlanComptableInitializer implements ApplicationRunner {
     private final CompteComptableRepository repository;
     private final PlanComptableImportService importService;
 
+    /** Comptes de cloture TVA indispensables (cadrage CA3), absents des anciens imports. */
+    private static final List<CompteComptable> COMPTES_REQUIS = List.of(
+            CompteComptable.builder().numeroCompte("44551").intitule("TVA a decaisser").classe(4).niveau(5).statut(CompteStatut.ACTIF).build(),
+            CompteComptable.builder().numeroCompte("44567").intitule("Credit de TVA a reporter").classe(4).niveau(5).statut(CompteStatut.ACTIF).build()
+    );
+
     @Override
     public void run(ApplicationArguments args) {
         long existants = repository.count();
         if (existants > 0) {
             log.info("Plan comptable deja present en base ({} compte(s)), import ignore.", existants);
+            ensureComptesRequis();
             return;
         }
 
@@ -48,6 +58,17 @@ public class PlanComptableInitializer implements ApplicationRunner {
                     resultat.getImportes(), resultat.getRejetes());
         } catch (Exception e) {
             log.error("Echec de l'import du plan comptable au demarrage : {}", e.getMessage(), e);
+        }
+    }
+
+    /** Insere les comptes requis manquants (idempotent), meme si le PCG est deja importe. */
+    private void ensureComptesRequis() {
+        for (CompteComptable compte : COMPTES_REQUIS) {
+            if (!repository.existsById(compte.getNumeroCompte())) {
+                repository.save(compte);
+                log.info("Compte requis ajoute au plan comptable : {} ({}).",
+                        compte.getNumeroCompte(), compte.getIntitule());
+            }
         }
     }
 }
