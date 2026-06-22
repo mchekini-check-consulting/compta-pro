@@ -1,0 +1,127 @@
+<div class="dash">
+  <div class="dash__header">
+    <h1>Tableau de bord</h1>
+
+    <!-- Filtre periode (AC-04) -->
+    <div class="dash__periode">
+      @for (p of [{ k: 'semaine', l: 'Cette semaine' }, { k: 'mois', l: 'Ce mois' }, { k: 'tout', l: 'Tout' }]; track p.k) {
+        <button
+          type="button"
+          class="dash__periode-btn"
+          [class.dash__periode-btn--active]="periode() === p.k"
+          (click)="setPeriode($any(p.k))"
+        >
+          {{ p.l }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Compteurs globaux cliquables (AC-01) -->
+  <div class="dash__counters">
+    <button type="button" class="counter counter--total" [class.counter--active]="filtre() === 'tout'" (click)="setFiltre('tout')">
+      <span class="counter__value">{{ total() }}</span>
+      <span class="counter__label">Total taches</span>
+    </button>
+    <button type="button" class="counter counter--afaire" [class.counter--active]="filtre() === 'a-faire'" (click)="setFiltre('a-faire')">
+      <span class="counter__value">{{ aFaire() }}</span>
+      <span class="counter__label">A faire</span>
+    </button>
+    <button type="button" class="counter counter--encours" [class.counter--active]="filtre() === 'en-cours'" (click)="setFiltre('en-cours')">
+      <span class="counter__value">{{ enCours() }}</span>
+      <span class="counter__label">En cours</span>
+    </button>
+    <button type="button" class="counter counter--retard" [class.counter--active]="filtre() === 'retard'" (click)="setFiltre('retard')">
+      <span class="counter__value">{{ enRetard() }}</span>
+      <span class="counter__label">En retard</span>
+    </button>
+  </div>
+
+  <div class="dash__grid">
+    <!-- Liste filtree par le compteur actif -->
+    <section class="dash__card dash__card--wide">
+      <h2 class="dash__card-title">
+        Taches
+        @if (filtre() !== 'tout') { <span class="dash__filter-pill">filtre actif</span> }
+      </h2>
+      @if (tachesFiltrees().length > 0) {
+        <table class="dash__table">
+          <thead>
+            <tr>
+              <th>Tache</th>
+              <th>Dossier</th>
+              <th>Collaborateur</th>
+              <th>Echeance</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of tachesFiltrees(); track t.id) {
+              <tr>
+                <td class="dash__cell-main">{{ t.titre }}</td>
+                <td>{{ t.clientRaisonSociale }}</td>
+                <td>{{ t.collaborateur }}</td>
+                <td>{{ formatDate(t.echeance) }}</td>
+                <td>
+                  @if (estEnRetard(t)) {
+                    <span class="badge badge--retard">En retard</span>
+                  } @else {
+                    <span class="badge" [attr.data-statut]="t.statut">{{ statutLabel(t.statut) }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="dash__empty">Aucune tache pour ce filtre.</p>
+      }
+    </section>
+
+    <!-- Repartition par collaborateur (AC-02) -->
+    <section class="dash__card">
+      <h2 class="dash__card-title">Par collaborateur</h2>
+      @if (parCollaborateur().length > 0) {
+        <ul class="collab">
+          @for (c of parCollaborateur(); track c.nom) {
+            <li class="collab__row">
+              <span class="collab__name">{{ c.nom }}</span>
+              <span class="collab__stats">
+                <span class="collab__stat collab__stat--afaire" title="A faire">{{ c.aFaire }}</span>
+                <span class="collab__stat collab__stat--encours" title="En cours">{{ c.enCours }}</span>
+                <span class="collab__stat collab__stat--retard" title="En retard">{{ c.enRetard }}</span>
+              </span>
+            </li>
+          }
+        </ul>
+        <div class="collab__legend">
+          <span><i class="dot dot--afaire"></i> A faire</span>
+          <span><i class="dot dot--encours"></i> En cours</span>
+          <span><i class="dot dot--retard"></i> En retard</span>
+        </div>
+      } @else {
+        <p class="dash__empty">Aucune tache sur la periode.</p>
+      }
+    </section>
+
+    <!-- Echeances a venir 7 jours (AC-03) -->
+    <section class="dash__card">
+      <h2 class="dash__card-title">Echeances a venir (7 jours)</h2>
+      @if (echeances7j().length > 0) {
+        <ul class="echeances">
+          @for (t of echeances7j(); track t.id) {
+            <li class="echeances__row">
+              <span class="echeances__date">{{ formatDate(t.echeance) }}</span>
+              <span class="echeances__info">
+                <span class="echeances__titre">{{ t.titre }}</span>
+                <span class="echeances__meta">{{ t.clientRaisonSociale }} · {{ t.collaborateur }}</span>
+              </span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="dash__empty">Aucune echeance dans les 7 prochains jours.</p>
+      }
+    </section>
+  </div>
+</div>

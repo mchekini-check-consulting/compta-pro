@@ -10,28 +10,38 @@ export interface Tache {
   clientId: number;
   /** Snapshot de la raison sociale : evite un fetch client pour afficher la tache. */
   clientRaisonSociale: string;
+  /** Collaborateur en charge de la tache (tableau de bord manager). */
+  collaborateur: string;
   /** Echeance au format ISO yyyy-mm-dd. */
   echeance: string;
   statut: TacheStatut;
   priorite: TachePriorite;
 }
 
-// v2 : taches rattachees aux dossiers reels (la v1 seedait des dossiers fictifs).
-const STORAGE_KEY = 'cabinet.taches.v2';
+// v3 : ajout du champ collaborateur (tableau de bord). v2 seedait sans collaborateur.
+const STORAGE_KEY = 'cabinet.taches.v3';
 
-// Modeles de taches generes pour chaque dossier reel (rotation par index).
+/** Collaborateurs fictifs du cabinet (pas de notion de role en base). */
+const COLLABORATEURS = ['Sophie Martin', 'Karim Benali', 'Lucie Durand', 'Thomas Petit'];
+
+// Modeles de taches generes pour chaque dossier reel. Offsets negatifs = en retard.
 const TEMPLATES: { titre: string; statut: TacheStatut; priorite: TachePriorite; offsetJours: number }[] = [
   { titre: 'Saisie des achats du mois', statut: 'A_FAIRE', priorite: 'HAUTE', offsetJours: 4 },
-  { titre: 'Rapprochement bancaire', statut: 'EN_COURS', priorite: 'NORMALE', offsetJours: 1 },
+  { titre: 'Rapprochement bancaire', statut: 'EN_COURS', priorite: 'NORMALE', offsetJours: -3 },
   { titre: 'Declaration TVA', statut: 'A_FAIRE', priorite: 'HAUTE', offsetJours: 9 },
   { titre: 'Lettrage des comptes tiers', statut: 'A_FAIRE', priorite: 'BASSE', offsetJours: 14 },
+  { titre: 'Revue des immobilisations', statut: 'A_FAIRE', priorite: 'HAUTE', offsetJours: -10 },
+  { titre: 'Cloture mensuelle', statut: 'EN_COURS', priorite: 'NORMALE', offsetJours: 2 },
 ];
 
-/** Decale une date de N jours et la renvoie au format ISO yyyy-mm-dd. */
+/** Decale la date du jour de N jours et la renvoie au format ISO local yyyy-mm-dd. */
 function isoDans(jours: number): string {
   const d = new Date();
   d.setDate(d.getDate() + jours);
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 /**
@@ -65,6 +75,11 @@ export class TasksStore {
     return this._taches().filter(
       (t) => t.clientId === clientId && t.statut !== 'FAIT'
     ).length;
+  }
+
+  /** Tache en retard : non terminee et echeance passee (avant `todayIso`). */
+  isEnRetard(t: Tache, todayIso: string): boolean {
+    return t.statut !== 'FAIT' && t.echeance < todayIso;
   }
 
   /**
@@ -124,18 +139,19 @@ export class TasksStore {
     if (tache) this.setStatut(id, next[tache.statut]);
   }
 
-  // Deux taches par dossier reel, en faisant tourner les modeles.
+  // Trois taches par dossier reel (triplets de modeles), collaborateurs en round-robin.
   private generateSeed(clients: Client[]): Tache[] {
     const taches: Tache[] = [];
     let id = 1;
     clients.forEach((client, i) => {
-      for (let k = 0; k < 2; k++) {
-        const t = TEMPLATES[(i + k) % TEMPLATES.length];
+      for (let k = 0; k < 3; k++) {
+        const t = TEMPLATES[(i * 3 + k) % TEMPLATES.length];
         taches.push({
           id: id++,
           titre: t.titre,
           clientId: client.id,
           clientRaisonSociale: client.raisonSociale,
+          collaborateur: COLLABORATEURS[taches.length % COLLABORATEURS.length],
           echeance: isoDans(t.offsetJours),
           statut: t.statut,
           priorite: t.priorite,

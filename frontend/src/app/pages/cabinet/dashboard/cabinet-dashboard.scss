@@ -1,0 +1,295 @@
+.dash {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+  }
+
+  &__periode {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  &__periode-btn {
+    padding: 0.45rem 0.9rem;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover { border-color: #9ca3af; }
+
+    &--active {
+      background: #0066ff;
+      border-color: #0066ff;
+      color: white;
+    }
+  }
+
+  // Compteurs
+  &__counters {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.25rem;
+    align-items: start;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+    &--wide {
+      grid-row: span 2;
+    }
+  }
+
+  &__card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 1rem;
+  }
+
+  &__filter-pill {
+    padding: 0.15rem 0.55rem;
+    background: #eff6ff;
+    color: #2563eb;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+
+    th, td {
+      padding: 0.65rem 0.5rem;
+      text-align: left;
+    }
+
+    th {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tbody tr:not(:last-child) {
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    td { color: #374151; }
+  }
+
+  &__cell-main {
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  &__empty {
+    color: #6b7280;
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+  }
+}
+
+// Compteur (carte cliquable)
+.counter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid #e8eaed;
+  border-left-width: 4px;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+
+  &:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08); transform: translateY(-1px); }
+
+  &__value {
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #6b7280;
+  }
+
+  &--total { border-left-color: #0066ff; .counter__value { color: #0066ff; } }
+  &--afaire { border-left-color: #ea580c; .counter__value { color: #ea580c; } }
+  &--encours { border-left-color: #2563eb; .counter__value { color: #2563eb; } }
+  &--retard { border-left-color: #dc2626; .counter__value { color: #dc2626; } }
+
+  &--active {
+    box-shadow: 0 0 0 2px currentColor inset;
+  }
+  &--total.counter--active { box-shadow: 0 0 0 2px #0066ff inset; }
+  &--afaire.counter--active { box-shadow: 0 0 0 2px #ea580c inset; }
+  &--encours.counter--active { box-shadow: 0 0 0 2px #2563eb inset; }
+  &--retard.counter--active { box-shadow: 0 0 0 2px #dc2626 inset; }
+}
+
+// Badges
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+
+  &[data-statut='A_FAIRE'] { background: #fff7ed; color: #ea580c; }
+  &[data-statut='EN_COURS'] { background: #eff6ff; color: #2563eb; }
+  &[data-statut='FAIT'] { background: #ecfdf5; color: #059669; }
+
+  &--retard { background: #fef2f2; color: #dc2626; }
+}
+
+// Par collaborateur
+.collab {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0.65rem;
+    border-radius: 8px;
+    background: #f8fafc;
+  }
+
+  &__name {
+    font-weight: 600;
+    color: #1a1a2e;
+    font-size: 0.9rem;
+  }
+
+  &__stats {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  &__stat {
+    min-width: 26px;
+    height: 26px;
+    padding: 0 0.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    font-size: 0.82rem;
+    font-weight: 700;
+
+    &--afaire { background: #fff7ed; color: #ea580c; }
+    &--encours { background: #eff6ff; color: #2563eb; }
+    &--retard { background: #fef2f2; color: #dc2626; }
+  }
+
+  &__legend {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.85rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+
+    span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  }
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+
+  &--afaire { background: #ea580c; }
+  &--encours { background: #2563eb; }
+  &--retard { background: #dc2626; }
+}
+
+// Echeances a venir
+.echeances {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.5rem 0.25rem;
+
+    &:not(:last-child) { border-bottom: 1px solid #f1f5f9; }
+  }
+
+  &__date {
+    flex-shrink: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #dc2626;
+    width: 84px;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__titre {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  &__meta {
+    font-size: 0.78rem;
+    color: #6b7280;
+  }
+}
