@@ -24,6 +24,12 @@ export class Balance implements OnInit {
   loading = true;
 
   ngOnInit(): void {
+    this.reload();
+  }
+
+  /** Recharge la balance (apres enregistrement d'une ecriture). */
+  reload(): void {
+    this.loading = true;
     this.grandLivreService.getGrandLivre(this.client.id).subscribe({
       next: (res) => {
         this.data = res;

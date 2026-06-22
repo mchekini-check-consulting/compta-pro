@@ -40,6 +40,9 @@ export class SaisieModal {
   @Output() closed = new EventEmitter<void>();
 
   @ViewChild('ecr') ecr?: EcritureModal;
+  @ViewChild(JournalComptable) journal?: JournalComptable;
+  @ViewChild(GrandLivre) grandLivre?: GrandLivre;
+  @ViewChild(Balance) balance?: Balance;
 
   private fecService = inject(FecService);
 
@@ -86,6 +89,10 @@ export class SaisieModal {
 
   onSaved(_: EcritureResponse): void {
     this.savedToast.set('Ecriture enregistree en brouillon');
+    // Transpose l'ecriture directement sur le Journal, le Grand livre et la Balance.
+    this.journal?.reload();
+    this.grandLivre?.reload();
+    this.balance?.reload();
     this.actif.set('journal');
     setTimeout(() => this.savedToast.set(''), 3000);
   }

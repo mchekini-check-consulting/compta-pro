@@ -29,6 +29,11 @@ export class JournalComptable implements OnInit {
     this.loadEcritures();
   }
 
+  /** Recharge la liste des ecritures (apres un enregistrement externe). */
+  reload(): void {
+    this.loadEcritures();
+  }
+
   private loadEcritures(): void {
     this.loading = true;
     this.journalService.getEcritures(this.client.id).subscribe({
