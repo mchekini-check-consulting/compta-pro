@@ -4,6 +4,18 @@ import { FormsModule } from '@angular/forms';
 import { Client } from '../../../services/client';
 import { CompteComptable, PlanComptableService } from '../../../services/plan-comptable';
 import { EcritureResponse, JournalService, LigneEcritureRequest } from '../../../services/journal';
+import {
+  ComptesVentilation,
+  TAUX_TVA,
+  TypeOperation,
+  clesPourType,
+  genererVentilation,
+  libelleCle,
+} from '../../../services/tva-ventilation';
+import { VentilationConfigStore } from '../../../services/ventilation-config.store';
+import { ChampDef, Gabarit, genererGabarit } from '../../../services/gabarits';
+import { GabaritLibrary } from '../gabarits/gabarit-library';
+import { GabaritBuilder } from '../gabarits/gabarit-builder';
 
 interface LigneModel {
   /** Texte saisi dans le champ compte (sert aussi a la recherche). */
@@ -14,6 +26,8 @@ interface LigneModel {
   debit: string;
   credit: string;
   showDropdown: boolean;
+  /** Ligne issue de la ventilation automatique (badge "auto", regeneration). */
+  auto?: boolean;
 }
 
 /**
@@ -25,7 +39,7 @@ interface LigneModel {
 @Component({
   selector: 'app-ecriture-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GabaritLibrary, GabaritBuilder],
   templateUrl: './ecriture-modal.html',
   styleUrl: './ecriture-modal.scss',
 })
@@ -38,6 +52,7 @@ export class EcritureModal implements OnInit {
 
   private planService = inject(PlanComptableService);
   private journalService = inject(JournalService);
+  private configStore = inject(VentilationConfigStore);
 
   // Referentiel des comptes (charge une fois) et recherche.
   comptes: CompteComptable[] = [];
@@ -48,6 +63,21 @@ export class EcritureModal implements OnInit {
 
   // AC-07 : au moins 2 lignes vides pre-affichees.
   lignes: LigneModel[] = [this.emptyLigne(), this.emptyLigne()];
+
+  // === Saisie assistee TVA ===
+  readonly typesOperation: { value: TypeOperation; label: string }[] = [
+    { value: 'ACHAT', label: 'Achat fournisseur' },
+    { value: 'VENTE', label: 'Vente client' },
+    { value: 'IMMO', label: 'Acquisition immobilisation' },
+  ];
+  readonly tauxTvaOptions = TAUX_TVA;
+  typeOp: TypeOperation = 'ACHAT';
+  montantHt = '';
+  tauxTva = 20;
+  genere = false;
+  // Mini-UI de configuration des comptes par dossier (AC-09).
+  showConfig = false;
+  configDraft!: ComptesVentilation;
 
   saving = false;
   submitError = '';
@@ -82,7 +112,132 @@ export class EcritureModal implements OnInit {
       debit: '',
       credit: '',
       showDropdown: false,
+      auto: false,
     };
+  }
+
+  // === Saisie assistee : ventilation automatique TVA ===
+
+  /** Montant HT parse (0 si invalide). */
+  private htValue(): number {
+    const v = this.montantHt.trim().replace(',', '.');
+    const n = parseFloat(v);
+    return EcritureModal.MONTANT_RE.test(v) && n > 0 ? n : 0;
+  }
+
+  /** Applique des lignes generees (auto) en conservant les lignes manuelles (AC-07/AC-08). */
+  private appliquerGenerees(
+    generees: { numeroCompte: string; libelle: string; debit: number | null; credit: number | null }[]
+  ): void {
+    const auto = generees.map((g): LigneModel => {
+      const ref = this.comptes.find((c) => c.numeroCompte === g.numeroCompte);
+      return {
+        compteInput: g.numeroCompte,
+        numeroCompte: g.numeroCompte,
+        libelleCompte: ref?.intitule ?? g.libelle,
+        libelle: g.libelle,
+        debit: g.debit != null ? g.debit.toFixed(2) : '',
+        credit: g.credit != null ? g.credit.toFixed(2) : '',
+        showDropdown: false,
+        auto: true,
+      };
+    });
+    const manuelles = this.lignes.filter((l) => !l.auto && this.isLigneRenseignee(l));
+    this.lignes = [...auto, ...manuelles];
+    this.genere = true;
+    this.maybeGenerateNumero(auto[0]?.numeroCompte ?? '');
+  }
+
+  /** Genere les lignes a partir du type / HT / taux (AC-01 a AC-05). */
+  genererAssiste(): void {
+    const ht = this.htValue();
+    if (ht <= 0) return;
+    const comptes = this.configStore.get(this.client.id);
+    this.appliquerGenerees(genererVentilation(this.typeOp, ht, this.tauxTva, comptes));
+  }
+
+  /** Regenere les lignes auto au changement de type / HT / taux (AC-07 / RG-006). */
+  onAssisteChange(): void {
+    if (this.genere && !this.gabaritActif) this.genererAssiste();
+  }
+
+  // === Bibliotheque de gabarits (TREZ — gabarits prédéfinis + personnalises) ===
+  showLibrary = false;
+  showBuilder = false;
+  gabaritActif: Gabarit | null = null;
+  gabaritValeurs: Record<string, number | string> = {};
+  gabaritAlertes: string[] = [];
+
+  ouvrirLibrary(): void {
+    this.showLibrary = true;
+  }
+  fermerLibrary(): void {
+    this.showLibrary = false;
+  }
+  onCreerGabarit(): void {
+    this.showLibrary = false;
+    this.showBuilder = true;
+  }
+  onBuilderEnregistre(): void {
+    this.showBuilder = false;
+    this.showLibrary = true; // retour a la bibliotheque
+  }
+  onBuilderAnnule(): void {
+    this.showBuilder = false;
+    this.showLibrary = true;
+  }
+
+  /** Selection d'un gabarit : initialise les champs et genere (AC-02). */
+  onChoisirGabarit(g: Gabarit): void {
+    this.gabaritActif = g;
+    this.showLibrary = false;
+    this.gabaritValeurs = {};
+    for (const champ of g.champs) {
+      this.gabaritValeurs[champ.id] = champ.defaut ?? (champ.type === 'choix' ? (champ.options?.[0]?.value ?? '') : 0);
+    }
+    this.genererDepuisGabarit();
+  }
+
+  /** Retour au mode TVA generique. */
+  changerGabarit(): void {
+    this.gabaritActif = null;
+    this.gabaritAlertes = [];
+  }
+
+  champsGabarit(): ChampDef[] {
+    return this.gabaritActif?.champs ?? [];
+  }
+
+  /** Genere les lignes du gabarit actif + alertes (AC-03 a AC-08, AC-12/13). */
+  genererDepuisGabarit(): void {
+    if (!this.gabaritActif) return;
+    const res = genererGabarit(this.gabaritActif, this.gabaritValeurs);
+    this.appliquerGenerees(res.lignes);
+    this.gabaritAlertes = res.alertes;
+  }
+
+  onGabaritChampChange(): void {
+    this.genererDepuisGabarit();
+  }
+
+  // === Mini-UI de configuration des comptes par dossier (AC-09) ===
+  configCles(): (keyof ComptesVentilation)[] {
+    return clesPourType(this.typeOp);
+  }
+  configLibelle(cle: keyof ComptesVentilation): string {
+    return libelleCle(cle);
+  }
+  openConfig(): void {
+    this.configDraft = this.configStore.get(this.client.id);
+    this.showConfig = true;
+  }
+  saveConfig(): void {
+    this.configStore.set(this.client.id, this.configDraft);
+    this.showConfig = false;
+    if (this.genere) this.genererAssiste();
+  }
+  cancelConfig(): void {
+    this.showConfig = false;
   }
 
   // === Recherche de compte (RG-008, insensible a la casse) ===
@@ -268,12 +423,28 @@ export class EcritureModal implements OnInit {
         next: (res) => {
           this.saving = false;
           this.saved.emit(res);
+          // En mode embarque (onglet de la modale), le formulaire reste monte :
+          // on le reinitialise pour une nouvelle ecriture et eviter un doublon.
+          if (this.embedded) this.resetForm();
         },
         error: (err) => {
           this.saving = false;
           this.submitError = err.error?.message || 'Une erreur est survenue lors de l’enregistrement';
         },
       });
+  }
+
+  /** Reinitialise le formulaire apres enregistrement (la date du jour est conservee). */
+  private resetForm(): void {
+    this.lignes = [this.emptyLigne(), this.emptyLigne()];
+    this.numeroOperation = '';
+    this.codeJournal = '';
+    this.montantHt = '';
+    this.genere = false;
+    this.submitError = '';
+    this.gabaritActif = null;
+    this.gabaritAlertes = [];
+    this.gabaritValeurs = {};
   }
 
   // === Fermeture (RG-017) ===

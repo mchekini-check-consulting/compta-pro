@@ -1,0 +1,93 @@
+<div class="gabbuild">
+  <div class="gabbuild__head">
+    <h3>Creer un gabarit personnalise</h3>
+    <button type="button" class="gabbuild__close" aria-label="Fermer" (click)="annuler.emit()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Identite -->
+  <div class="gabbuild__row">
+    <div class="gabbuild__field gabbuild__field--grow">
+      <label>Nom du gabarit</label>
+      <input type="text" [(ngModel)]="nom" placeholder="Ex : Loyer mensuel bureau" />
+    </div>
+    <div class="gabbuild__field">
+      <label>Icone</label>
+      <div class="gabbuild__icones">
+        @for (ic of icones; track ic) {
+          <button type="button" class="gabbuild__icone" [class.is-active]="icone === ic" (click)="icone = ic">{{ ic }}</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Champs variables -->
+  <div class="gabbuild__section">
+    <div class="gabbuild__section-head">
+      <span>Champs variables</span>
+      <button type="button" class="gabbuild__add" (click)="addChamp()">+ Champ</button>
+    </div>
+    @for (c of champs; track $index) {
+      <div class="gabbuild__champ">
+        <input class="gabbuild__var" type="text" [(ngModel)]="c.id" placeholder="variable" title="Nom de variable (formules)" />
+        <input type="text" [(ngModel)]="c.label" placeholder="Libelle affiche" />
+        <select [(ngModel)]="c.type">
+          @for (t of typesChamp; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+        </select>
+        <input class="gabbuild__def" type="number" [(ngModel)]="c.defaut" placeholder="defaut" />
+        <button type="button" class="gabbuild__del" (click)="removeChamp($index)" [disabled]="champs.length === 1">✕</button>
+      </div>
+    }
+  </div>
+
+  <!-- Lignes fixes -->
+  <div class="gabbuild__section">
+    <div class="gabbuild__section-head">
+      <span>Lignes de l'ecriture</span>
+      <button type="button" class="gabbuild__add" (click)="addLigne()">+ Ligne</button>
+    </div>
+    <div class="gabbuild__hint">Variables : {{ variablesDisponibles() }} — ex : <code>round(montant / 12)</code></div>
+    @for (l of lignes; track $index) {
+      <div class="gabbuild__ligne">
+        <input class="gabbuild__compte" type="text" [(ngModel)]="l.compte" placeholder="Compte" />
+        <input type="text" [(ngModel)]="l.libelle" placeholder="Libelle" />
+        <select class="gabbuild__sens" [(ngModel)]="l.sens">
+          <option value="D">Debit</option>
+          <option value="C">Credit</option>
+        </select>
+        <input class="gabbuild__formule" type="text" [(ngModel)]="l.formule" placeholder="Formule (ex : montant)" />
+        <button type="button" class="gabbuild__del" (click)="removeLigne($index)" [disabled]="lignes.length === 1">✕</button>
+      </div>
+    }
+  </div>
+
+  <!-- Alerte + portee -->
+  <div class="gabbuild__row">
+    <div class="gabbuild__field gabbuild__field--grow">
+      <label>Note d'alerte (optionnelle)</label>
+      <input type="text" [(ngModel)]="alerteMessage" placeholder="Ex : Conserver le justificatif" />
+    </div>
+    <div class="gabbuild__field">
+      <label>Condition (optionnelle)</label>
+      <input type="text" [(ngModel)]="alerteCondition" placeholder="Ex : montant > 1000" />
+    </div>
+  </div>
+
+  <div class="gabbuild__row">
+    <div class="gabbuild__field">
+      <label>Portee</label>
+      <select [(ngModel)]="portee">
+        <option value="DOSSIER">Ce dossier uniquement</option>
+        <option value="CABINET">Tout le cabinet</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="gabbuild__actions">
+    <button type="button" class="ecriture__btn-cancel" (click)="annuler.emit()">Annuler</button>
+    <button type="button" class="ecriture__btn-save" [disabled]="!canSave()" (click)="save()">Enregistrer le gabarit</button>
+  </div>
+</div>

@@ -28,6 +28,113 @@
     <div class="ecriture__error">{{ submitError }}</div>
   }
 
+  <!-- Saisie assistee : ventilation TVA generique OU gabarit -->
+  <div class="assist">
+    <div class="assist__head">
+      <span class="assist__title">✦ Saisie assistee</span>
+      <div class="assist__head-actions">
+        <button type="button" class="assist__lib-btn" (click)="ouvrirLibrary()">Choisir un gabarit</button>
+        @if (!gabaritActif) {
+          <button type="button" class="assist__config-btn" (click)="openConfig()" title="Configurer les comptes du dossier">⚙ Comptes</button>
+        }
+      </div>
+    </div>
+
+    @if (gabaritActif) {
+      <!-- Mode gabarit (AC-02) -->
+      <div class="assist__gabarit-head">
+        <span class="assist__gabarit-nom">{{ gabaritActif.icone }} {{ gabaritActif.nom }}</span>
+        <button type="button" class="assist__changer" (click)="changerGabarit()">× Changer de gabarit</button>
+      </div>
+      <div class="assist__fields">
+        @for (champ of champsGabarit(); track champ.id) {
+          <div class="assist__field">
+            <label>{{ champ.label }}</label>
+            @if (champ.type === 'choix') {
+              <select [(ngModel)]="gabaritValeurs[champ.id]" (ngModelChange)="onGabaritChampChange()">
+                @for (o of champ.options; track o.value) {
+                  <option [value]="o.value">{{ o.label }}</option>
+                }
+              </select>
+            } @else {
+              <input type="number" [(ngModel)]="gabaritValeurs[champ.id]" (ngModelChange)="onGabaritChampChange()" />
+            }
+          </div>
+        }
+        <button type="button" class="assist__generate" (click)="genererDepuisGabarit()">Generer</button>
+      </div>
+      @for (a of gabaritAlertes; track a) {
+        <div class="assist__alerte">{{ a }}</div>
+      }
+    } @else {
+      <!-- Mode TVA generique -->
+      <div class="assist__fields">
+        <div class="assist__field assist__field--type">
+          <label>Type d'operation</label>
+          <select [(ngModel)]="typeOp" (ngModelChange)="onAssisteChange()">
+            @for (t of typesOperation; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="assist__field">
+          <label>Montant HT (€)</label>
+          <input type="text" placeholder="0.00" [(ngModel)]="montantHt" (ngModelChange)="onAssisteChange()" />
+        </div>
+        <div class="assist__field">
+          <label>Taux TVA</label>
+          <select [(ngModel)]="tauxTva" (ngModelChange)="onAssisteChange()">
+            @for (t of tauxTvaOptions; track t) {
+              <option [ngValue]="t">{{ t }} %</option>
+            }
+          </select>
+        </div>
+        <button type="button" class="assist__generate" (click)="genererAssiste()">Generer les lignes</button>
+      </div>
+
+      @if (showConfig) {
+        <div class="assist__config">
+          <p class="assist__config-title">Comptes pour ce dossier ({{ typeOp }})</p>
+          @for (cle of configCles(); track cle) {
+            <div class="assist__config-row">
+              <label>{{ configLibelle(cle) }}</label>
+              <input type="text" [(ngModel)]="configDraft[cle]" />
+            </div>
+          }
+          <div class="assist__config-actions">
+            <button type="button" class="ecriture__btn-cancel" (click)="cancelConfig()">Annuler</button>
+            <button type="button" class="ecriture__btn-save" (click)="saveConfig()">Enregistrer</button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Bibliotheque de gabarits (AC-01) -->
+  @if (showLibrary) {
+    <div class="gabarit-overlay" (click)="fermerLibrary()">
+      <div class="gabarit-panel" (click)="$event.stopPropagation()">
+        <app-gabarit-library
+          [clientId]="client.id"
+          (choisir)="onChoisirGabarit($event)"
+          (creer)="onCreerGabarit()"
+          (fermer)="fermerLibrary()"
+        />
+      </div>
+    </div>
+  }
+  @if (showBuilder) {
+    <div class="gabarit-overlay">
+      <div class="gabarit-panel gabarit-panel--large" (click)="$event.stopPropagation()">
+        <app-gabarit-builder
+          [clientId]="client.id"
+          (enregistre)="onBuilderEnregistre()"
+          (annuler)="onBuilderAnnule()"
+        />
+      </div>
+    </div>
+  }
+
   <!-- En-tete : date (pre-remplie) + numero d'operation auto (AC-06) -->
   <div class="ecriture__meta">
     <div class="ecriture__field">
@@ -89,6 +196,9 @@
           </div>
           @if (ligne.libelleCompte) {
             <span class="ecriture__compte-label">{{ ligne.libelleCompte }}</span>
+          }
+          @if (ligne.auto) {
+            <span class="ecriture__auto-badge" title="Ligne generee automatiquement">✦ auto</span>
           }
           @if (ligne.showDropdown) {
             <ul class="ecriture__dropdown">

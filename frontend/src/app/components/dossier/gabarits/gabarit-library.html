@@ -1,0 +1,30 @@
+<div class="gablib">
+  <div class="gablib__head">
+    <h3>Bibliotheque de gabarits</h3>
+    <button type="button" class="gablib__close" aria-label="Fermer" (click)="fermer.emit()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="gablib__grid">
+    @for (g of gabarits(); track g.id) {
+      <button type="button" class="gabcard" (click)="choisir.emit(g)">
+        @if (!estPredefini(g)) {
+          <span class="gabcard__del" title="Supprimer" (click)="$event.stopPropagation(); supprimerGabarit(g.id)">×</span>
+        }
+        <span class="gabcard__icon">{{ g.icone }}</span>
+        <span class="gabcard__nom">{{ g.nom }}</span>
+        <span class="gabcard__resume">{{ g.resume }}</span>
+        <span class="gabcard__portee" [attr.data-predefini]="estPredefini(g)">{{ porteeLabel(g) }}</span>
+      </button>
+    }
+
+    <button type="button" class="gabcard gabcard--creer" (click)="creer.emit()">
+      <span class="gabcard__icon">＋</span>
+      <span class="gabcard__nom">Creer un gabarit</span>
+      <span class="gabcard__resume">Gabarit personnalise</span>
+    </button>
+  </div>
+</div>
