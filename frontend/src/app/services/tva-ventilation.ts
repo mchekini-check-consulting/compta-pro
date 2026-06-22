@@ -39,18 +39,17 @@ export const COMPTES_DEFAUT: ComptesVentilation = {
   immoFournisseur: '404',
 };
 
-// Libelles par defaut (sans caracteres speciaux : le validateur de libelle
-// n'autorise que lettres/chiffres/espaces).
+// Libelles par defaut (la ponctuation comptable est desormais autorisee).
 const LIBELLES: Record<string, string> = {
   achatCharge: 'Achats de marchandises',
-  achatTva: 'TVA deductible biens services',
+  achatTva: 'TVA déductible biens/services',
   achatFournisseur: 'Fournisseurs',
   venteClient: 'Clients',
   venteProduit: 'Prestations de services',
-  venteTva: 'TVA collectee',
-  immoCompte: 'Materiel informatique',
-  immoTva: 'TVA deductible sur immobilisations',
-  immoFournisseur: 'Fournisseurs d immobilisations',
+  venteTva: 'TVA collectée',
+  immoCompte: 'Matériel informatique',
+  immoTva: 'TVA déductible sur immobilisations',
+  immoFournisseur: "Fournisseurs d'immobilisations",
 };
 
 export interface LigneGeneree {

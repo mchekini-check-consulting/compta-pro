@@ -69,19 +69,18 @@ export interface GenResult {
 /** Plafond URSSAF repas 2026 par couvert (RG-001). */
 export const PLAFOND_REPAS = 20.7;
 
-// Libelles par defaut (sans caracteres speciaux : le validateur de libelle
-// n'autorise que lettres/chiffres/espaces).
+// Libelles par defaut (la ponctuation comptable est desormais autorisee).
 const L: Record<string, string> = {
-  '625': 'Deplacements missions et receptions',
-  '44566': 'TVA deductible',
+  '625': 'Déplacements, missions et réceptions',
+  '44566': 'TVA déductible',
   '401': 'Fournisseurs',
-  '421': 'Personnel remunerations dues',
+  '421': 'Personnel — rémunérations dues',
   '6061': 'Carburant',
-  '641': 'Remunerations du personnel',
+  '641': 'Rémunérations du personnel',
   '645': 'Charges sociales patronales',
-  '431': 'Securite sociale',
+  '431': 'Sécurité sociale',
   '681': 'Dotations aux amortissements',
-  '2813': 'Amortissements materiel informatique',
+  '2813': 'Amortissements matériel informatique',
   '607': 'Achats de marchandises',
 };
 
@@ -123,7 +122,7 @@ export const GABARITS_PREDEFINIS: Gabarit[] = [
       lignes.push(ligne('401', 'C', ttc));
       const alertes: string[] = [];
       if (ttc / nbCouverts > PLAFOND_REPAS) {
-        alertes.push(`⚠ Plafond URSSAF depasse (${PLAFOND_REPAS.toFixed(2)} € par repas)`);
+        alertes.push(`⚠ Plafond URSSAF dépassé (${PLAFOND_REPAS.toFixed(2)} € par repas)`);
       }
       return { lignes, alertes };
     },
@@ -194,7 +193,7 @@ export const GABARITS_PREDEFINIS: Gabarit[] = [
           ligne('421', 'C', net),
           ligne('431', 'C', secu),
         ],
-        alertes: ['⚠ Montants calcules par approximation — ajuster selon le bulletin de paie reel'],
+        alertes: ['⚠ Montants calculés par approximation — ajuster selon le bulletin de paie réel'],
       };
     },
   },
@@ -247,7 +246,7 @@ export const GABARITS_PREDEFINIS: Gabarit[] = [
       lignes.push(ligne('607', 'C', ht));
       return {
         lignes,
-        alertes: ['⚠ Faire reference au N° de facture d origine dans le libelle'],
+        alertes: ["⚠ Faire référence au N° de facture d'origine dans le libellé"],
       };
     },
   },

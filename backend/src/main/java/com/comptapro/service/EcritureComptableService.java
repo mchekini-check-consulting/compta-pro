@@ -29,8 +29,12 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class EcritureComptableService {
 
-    /** RG-009 : libelle alphanumerique (lettres accentuees, chiffres, espaces). */
-    private static final Pattern LIBELLE_VALIDE = Pattern.compile("^[\\p{L}\\p{N} ]+$");
+    /**
+     * RG-009 : libelle libre. Lettres accentuees, chiffres et ponctuation
+     * comptable (/ ' - , . etc.) sont autorises ; seuls tab et retour-ligne
+     * sont interdits (delimiteurs du FEC, par ailleurs assainis a l'export).
+     */
+    private static final Pattern LIBELLE_VALIDE = Pattern.compile("^[^\\t\\r\\n]+$");
 
     private final EcritureComptableRepository ecritureRepository;
     private final ClientRepository clientRepository;
@@ -119,11 +123,11 @@ public class EcritureComptableService {
         BigDecimal totalCredit = BigDecimal.ZERO;
 
         for (LigneEcritureRequest l : lignes) {
-            // RG-009 : libelle obligatoire et alphanumerique.
+            // RG-009 : libelle obligatoire (tab/retour-ligne interdits).
             String libelle = l.getLibelle() != null ? l.getLibelle().trim() : "";
             if (libelle.isEmpty() || !LIBELLE_VALIDE.matcher(libelle).matches()) {
                 throw new IllegalArgumentException(
-                        "Le libelle de ligne est obligatoire et doit etre alphanumerique");
+                        "Le libelle de ligne est obligatoire");
             }
 
             BigDecimal debit = l.getDebit();

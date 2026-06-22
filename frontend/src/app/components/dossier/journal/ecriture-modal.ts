@@ -83,7 +83,10 @@ export class EcritureModal implements OnInit {
   submitError = '';
   showConfirmClose = false;
 
-  private static readonly LIBELLE_RE = /^[\p{L}\p{N} ]+$/u;
+  // Libelle libre : on autorise lettres accentuees, chiffres, ponctuation
+  // comptable (/ ' - , . etc.). On interdit seulement tab/retour-ligne
+  // (delimiteurs du FEC) ; ces caracteres sont aussi assainis a l'export.
+  private static readonly LIBELLE_RE = /^[^\t\r\n]+$/;
   private static readonly DATE_RE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
   private static readonly MONTANT_RE = /^-?\d+(\.\d{1,2})?$/;
 
