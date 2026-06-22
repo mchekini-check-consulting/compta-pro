@@ -1,0 +1,60 @@
+<div class="gl">
+  @if (loading) {
+    <p class="gl__loading">Chargement du grand livre...</p>
+  } @else if (!data || data.comptes.length === 0) {
+    <p class="gl__empty">Aucun mouvement comptable pour ce dossier.</p>
+  } @else {
+    @for (compte of data.comptes; track trackCompte($index, compte)) {
+      <section class="gl__compte">
+        <header class="gl__compte-head">
+          <span class="gl__numero">{{ compte.numeroCompte }}</span>
+          <span class="gl__libelle">{{ compte.libelleCompte }}</span>
+          <span class="gl__solde" [class.gl__solde--crediteur]="compte.solde < 0">
+            Solde {{ compte.solde.toFixed(2) }} €
+          </span>
+        </header>
+
+        <table class="gl__table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Jal</th>
+              <th>N° operation</th>
+              <th>Libelle</th>
+              <th class="gl__num">Debit</th>
+              <th class="gl__num">Credit</th>
+              <th class="gl__num">Solde</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of compte.mouvements; track $index) {
+              <tr>
+                <td>{{ formatDate(m.date) }}</td>
+                <td>{{ m.codeJournal }}</td>
+                <td>{{ m.numeroOperation }}</td>
+                <td>{{ m.libelle }}</td>
+                <td class="gl__num">{{ formatMontant(m.debit) }}</td>
+                <td class="gl__num">{{ formatMontant(m.credit) }}</td>
+                <td class="gl__num">{{ m.solde.toFixed(2) }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4">Total compte</td>
+              <td class="gl__num">{{ compte.totalDebit.toFixed(2) }}</td>
+              <td class="gl__num">{{ compte.totalCredit.toFixed(2) }}</td>
+              <td class="gl__num">{{ compte.solde.toFixed(2) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </section>
+    }
+
+    <div class="gl__total">
+      <span>Total general</span>
+      <span class="gl__num">Debit {{ data.totalDebit.toFixed(2) }} €</span>
+      <span class="gl__num">Credit {{ data.totalCredit.toFixed(2) }} €</span>
+    </div>
+  }
+</div>

@@ -2,16 +2,17 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Client, RegimeFiscal, RegimeTVA } from '../../../services/client';
 import { DASH, formatDateFr } from '../dossier-format';
-import { JournalComptable } from '../journal/journal-comptable';
+import { SaisieComptable } from '../saisie-comptable/saisie-comptable';
 
 /**
  * Contenu du drawer "Comptabilite" (TREZ-41) : donnees de base comptables et
- * missions en cours (consultation), suivi du Journal de saisie (US ecriture).
+ * missions en cours (consultation), suivi de la saisie comptable en onglets
+ * (Journal / Grand livre / FEC).
  */
 @Component({
   selector: 'app-dossier-compta',
   standalone: true,
-  imports: [CommonModule, JournalComptable],
+  imports: [CommonModule, SaisieComptable],
   templateUrl: './dossier-compta.html',
   styleUrl: './dossier-compta.scss',
 })

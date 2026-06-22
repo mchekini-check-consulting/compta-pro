@@ -20,6 +20,8 @@ public class CorsConfig {
             "http://localhost:4201"
         ));
         config.setAllowedHeaders(Arrays.asList("*"));
+        // Permet au frontend de lire le nom du fichier FEC renvoye dans l'en-tete.
+        config.setExposedHeaders(Arrays.asList("Content-Disposition"));
         config.setAllowedMethods(Arrays.asList(
             "GET",
             "POST",

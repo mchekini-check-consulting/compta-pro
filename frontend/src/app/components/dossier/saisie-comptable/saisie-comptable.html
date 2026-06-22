@@ -1,0 +1,30 @@
+<div class="saisie">
+  <nav class="saisie__tabs" role="tablist">
+    @for (onglet of onglets; track onglet.key) {
+      <button
+        type="button"
+        role="tab"
+        class="saisie__tab"
+        [class.saisie__tab--active]="actif === onglet.key"
+        [attr.aria-selected]="actif === onglet.key"
+        (click)="select(onglet.key)"
+      >
+        {{ onglet.label }}
+      </button>
+    }
+  </nav>
+
+  <div class="saisie__panel">
+    @switch (actif) {
+      @case ('journal') {
+        <app-journal-comptable [client]="client" />
+      }
+      @case ('grand-livre') {
+        <app-grand-livre [client]="client" />
+      }
+      @case ('fec') {
+        <app-fec [client]="client" />
+      }
+    }
+  </div>
+</div>

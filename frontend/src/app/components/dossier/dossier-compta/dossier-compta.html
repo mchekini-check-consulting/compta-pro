@@ -23,8 +23,9 @@
     <p class="compta__empty">Aucune mission comptable en cours</p>
   </section>
 
-  <!-- Journal de saisie (US ecriture comptable) -->
+  <!-- Saisie comptable en onglets : Journal / Grand livre / FEC -->
   <section class="compta__section">
-    <app-journal-comptable [client]="client" />
+    <h3 class="compta__title">Saisie comptable</h3>
+    <app-saisie-comptable [client]="client" />
   </section>
 </div>

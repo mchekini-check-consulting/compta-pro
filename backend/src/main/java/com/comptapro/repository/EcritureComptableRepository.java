@@ -13,6 +13,9 @@ public interface EcritureComptableRepository extends JpaRepository<EcritureCompt
 
     List<EcritureComptable> findByClientIdOrderByDateEcritureDescIdDesc(Long clientId);
 
+    /** Ecritures d'un dossier en ordre chronologique (grand livre, FEC). */
+    List<EcritureComptable> findByClientIdOrderByDateEcritureAscIdAsc(Long clientId);
+
     /**
      * Dernier rang de sequence utilise pour un dossier, un journal et une annee
      * donnes (RG-004). Renvoie 0 si aucune ecriture n'existe encore.

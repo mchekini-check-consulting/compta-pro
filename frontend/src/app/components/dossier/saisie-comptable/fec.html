@@ -1,0 +1,25 @@
+<div class="fec">
+  @if (loading) {
+    <p class="fec__loading">Generation du FEC...</p>
+  } @else if (error) {
+    <p class="fec__error">{{ error }}</p>
+  } @else {
+    <div class="fec__head">
+      <div>
+        <h4 class="fec__title">Fichier des Ecritures Comptables</h4>
+        <p class="fec__meta">{{ filename }} — {{ nbLignes }} ligne(s) d'ecriture</p>
+      </div>
+      <button type="button" class="fec__download" [disabled]="nbLignes === 0" (click)="download()">
+        Telecharger le FEC
+      </button>
+    </div>
+
+    @if (nbLignes === 0) {
+      <p class="fec__empty">Aucune ecriture a exporter pour ce dossier.</p>
+    } @else {
+      <p class="fec__caption">Apercu (10 premieres lignes, format DGFiP tabule) :</p>
+      <pre class="fec__preview">@for (l of apercu; track $index) {{{ l }}
+}</pre>
+    }
+  }
+</div>
