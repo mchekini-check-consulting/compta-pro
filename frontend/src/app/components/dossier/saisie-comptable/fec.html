@@ -234,6 +234,42 @@
           <pre class="fec__apercu-fichier"><span class="fec__apercu-entete">{{ g.entete }}</span>
 @for (l of g.apercu; track $index) {{{ l }}
 }</pre>
+
+          <!-- AC-03 : tracabilite de l'export courant -->
+          @if (traceCourante; as t) {
+            <h5>Tracabilite de l'export</h5>
+            <table class="fec__specs">
+              <tbody>
+                <tr><td>Dossier</td><td>{{ client.raisonSociale }}</td></tr>
+                <tr><td>Exercice</td><td>{{ t.annee ?? '—' }}</td></tr>
+                <tr><td>Date et heure</td><td>{{ t.date | date: 'dd/MM/yyyy HH:mm' }} (Europe/Paris)</td></tr>
+                <tr><td>Utilisateur</td><td>{{ t.utilisateur }}</td></tr>
+                <tr><td>Lignes exportees</td><td>{{ t.nbLignes }}</td></tr>
+                <tr><td>Avertissements</td><td>{{ t.nbAvertissements }}</td></tr>
+                <tr><td>Statut</td><td><span class="fec__statut fec__statut--succes">✓ Succes</span></td></tr>
+                <tr>
+                  <td>Conformite CTRL-DGFIP</td>
+                  <td>
+                    @if (t.valideCtrlDgfip) {
+                      <span class="fec__ctrl-ok">✓ Valide CTRL-DGFIP — {{ t.dateValidationCtrl | date: 'dd/MM/yyyy' }}</span>
+                    } @else {
+                      <span class="fec__type fec__type--avertissement">En attente de validation</span>
+                      <button type="button" class="fec__relink" (click)="validerCtrl(t)">Marquer comme valide CTRL-DGFIP</button>
+                    }
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          }
+
+          <div class="fec__actions">
+            <button type="button" class="fec__refresh" (click)="reTelechargerFichierGenere()">
+              Re-telecharger le fichier
+            </button>
+            <button type="button" class="fec__refresh" (click)="nouvelExport()">
+              Nouvel export FEC
+            </button>
+          </div>
         </section>
       }
 

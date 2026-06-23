@@ -72,6 +72,8 @@ export class Fec implements OnInit {
   ];
   etapeGeneration = -1;
   private generationTimer?: ReturnType<typeof setInterval>;
+  /** Blob du dernier fichier genere, pour re-telechargement sans re-generation (AC-02). */
+  private blobGenere?: Blob;
   /** Resultat detaille de la derniere generation (AC-02/03/09). */
   resultatGeneration?: {
     filename: string;
@@ -232,6 +234,31 @@ export class Fec implements OnInit {
     });
   }
 
+  /** Re-telecharge le fichier qu'on vient de generer, sans re-generation (AC-02, RG-004). */
+  reTelechargerFichierGenere(): void {
+    if (this.blobGenere && this.resultatGeneration) {
+      this.declencherTelechargement(this.blobGenere, this.resultatGeneration.filename);
+    }
+  }
+
+  /** Trace de l'export courant (la plus recente de l'historique) pour AC-03. */
+  get traceCourante(): FecExportResume | undefined {
+    return this.historique[0];
+  }
+
+  /** Repart a l'etape 1 en effacant tous les etats intermediaires (AC-05). */
+  nouvelExport(): void {
+    this.resultatGeneration = undefined;
+    this.blobGenere = undefined;
+    this.rapport = undefined;
+    this.message = '';
+    this.error = '';
+    this.dernierHash = '';
+    this.detailOuvert = undefined;
+    this.etape = 'preparation';
+    this.chargerExercices();
+  }
+
   private demarrerGeneration(): void {
     this.etapeGeneration = 0;
     clearInterval(this.generationTimer);
@@ -261,6 +288,7 @@ export class Fec implements OnInit {
     const hash = h.get('X-Fec-Sha256') ?? (await this.sha256(blob));
 
     this.dernierHash = hash;
+    this.blobGenere = blob;
     this.resultatGeneration = {
       filename,
       nbLignes,
