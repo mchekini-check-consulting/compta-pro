@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Client } from '../../../services/client';
 import { EcritureResponse, JournalService } from '../../../services/journal';
@@ -15,8 +15,10 @@ import { EcritureModal } from './ecriture-modal';
   templateUrl: './journal-comptable.html',
   styleUrl: './journal-comptable.scss',
 })
-export class JournalComptable implements OnInit {
+export class JournalComptable implements OnInit, OnChanges {
   @Input({ required: true }) client!: Client;
+  /** Numero d'ecriture a mettre en evidence (lien depuis le FEC, AC-03). */
+  @Input() highlightNumero?: string;
 
   private journalService = inject(JournalService);
 
@@ -27,6 +29,22 @@ export class JournalComptable implements OnInit {
 
   ngOnInit(): void {
     this.loadEcritures();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['highlightNumero'] && this.highlightNumero && !this.loading) {
+      this.scrollToHighlight();
+    }
+  }
+
+  private scrollToHighlight(): void {
+    const numero = this.highlightNumero;
+    if (!numero) return;
+    const cible = this.ecritures.find((e) => e.numeroOperation === numero);
+    if (!cible) return;
+    setTimeout(() => {
+      document.getElementById('ecr-' + cible.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   }
 
   /** Recharge la liste des ecritures (apres un enregistrement externe). */
@@ -40,6 +58,7 @@ export class JournalComptable implements OnInit {
       next: (list) => {
         this.ecritures = list;
         this.loading = false;
+        if (this.highlightNumero) this.scrollToHighlight();
       },
       error: () => (this.loading = false),
     });

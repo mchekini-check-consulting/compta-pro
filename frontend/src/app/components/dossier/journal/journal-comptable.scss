@@ -44,6 +44,14 @@
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     padding: 0.6rem 0.8rem;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  // Ecriture ciblee depuis un lien du FEC (AC-03).
+  &__item--highlight {
+    border-color: #b91c1c;
+    background: #fef2f2;
+    box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.25);
   }
 
   &__item-head {

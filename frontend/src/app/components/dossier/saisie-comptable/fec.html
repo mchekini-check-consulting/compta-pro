@@ -1,25 +1,328 @@
 <div class="fec">
   @if (loading) {
-    <p class="fec__loading">Generation du FEC...</p>
-  } @else if (error) {
+    <p class="fec__loading">Collecte des ecritures en cours...</p>
+  } @else if (error && !synthese && !rapport) {
     <p class="fec__error">{{ error }}</p>
   } @else {
     <div class="fec__head">
       <div>
         <h4 class="fec__title">Fichier des Ecritures Comptables</h4>
-        <p class="fec__meta">{{ filename }} — {{ nbLignes }} ligne(s) d'ecriture</p>
+        <p class="fec__meta">
+          Etape {{ etape === 'preparation' ? '1 — Preparation' : '2 — Controle qualite' }}
+        </p>
       </div>
-      <button type="button" class="fec__download" [disabled]="nbLignes === 0" (click)="download()">
-        Telecharger le FEC
-      </button>
     </div>
 
-    @if (nbLignes === 0) {
-      <p class="fec__empty">Aucune ecriture a exporter pour ce dossier.</p>
-    } @else {
-      <p class="fec__caption">Apercu (10 premieres lignes, format DGFiP tabule) :</p>
-      <pre class="fec__preview">@for (l of apercu; track $index) {{{ l }}
-}</pre>
+    @if (exercices.length > 0) {
+      <div class="fec__exercice">
+        <label for="fec-exercice">Exercice :</label>
+        <select
+          id="fec-exercice"
+          [value]="exerciceSelectionne?.annee"
+          (change)="selectionnerExercice(+$any($event.target).value)"
+        >
+          @for (ex of exercices; track ex.annee) {
+            <option [value]="ex.annee">
+              Exercice {{ ex.annee }} ({{ ex.debut | date: 'dd/MM/yyyy' }} au {{ ex.cloture | date: 'dd/MM/yyyy' }})
+              — {{ ex.nbEcritures }} ecriture(s) {{ ex.equilibre ? '✓' : '⚠' }}
+            </option>
+          }
+        </select>
+      </div>
+    }
+
+    @if (exercicePartiel) {
+      <p class="fec__alert">
+        ⚠ L'exercice {{ exerciceSelectionne?.annee }} n'est pas encore cloture — le FEC ne couvrira
+        pas les ecritures futures (export partiel autorise).
+      </p>
+    }
+
+    @if (message) {
+      <p class="fec__success">{{ message }}</p>
+      @if (dernierHash) {
+        <p class="fec__hash">SHA-256 : <code>{{ dernierHash }}</code></p>
+      }
+    }
+    @if (error) {
+      <p class="fec__error">{{ error }}</p>
+    }
+
+    <!-- ====================== ETAPE 1 : PREPARATION (FEC-001) ====================== -->
+    @if (etape === 'preparation' && synthese; as s) {
+      @if (s.totalLignes === 0) {
+        <p class="fec__blocked">
+          Aucune ecriture trouvee pour cet exercice — verifier les dates ou saisir des ecritures
+          avant de generer le FEC.
+        </p>
+      } @else {
+        <!-- Alertes (AC-06/07/08) -->
+        @if (!s.equilibre) {
+          <p class="fec__alert fec__alert--bloquant">
+            ⚠ Ecart de {{ s.ecart | number: '1.2-2' }} € entre debit et credit — progression bloquee.
+          </p>
+        }
+        @if (!s.anPresent) {
+          <p class="fec__alert">⚠ Aucun a-nouveau detecte — verifier l'ouverture de l'exercice.</p>
+        }
+        @if (s.nbComptesHorsPcg > 0) {
+          <p class="fec__alert">⚠ {{ s.nbComptesHorsPcg }} compte(s) hors PCG — a traiter au controle qualite.</p>
+        }
+
+        <!-- Synthese par journal (AC-04) -->
+        <section class="fec__group">
+          <h5>Synthese par journal</h5>
+          <table class="fec__table">
+            <thead>
+              <tr>
+                <th>Journal</th>
+                <th>Libelle</th>
+                <th>Lignes</th>
+                <th>Total Debit</th>
+                <th>Total Credit</th>
+                <th>Equilibre</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (j of s.journaux; track j.code) {
+                <tr>
+                  <td>{{ j.code }}</td>
+                  <td>{{ j.libelle }}</td>
+                  <td>{{ j.nbLignes }}</td>
+                  <td>{{ j.totalDebit | number: '1.2-2' }} €</td>
+                  <td>{{ j.totalCredit | number: '1.2-2' }} €</td>
+                  <td>{{ j.equilibre ? '✓' : '⚠' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Compteurs globaux (AC-05) -->
+        <section class="fec__global">
+          <div><span>Lignes collectees</span><strong>{{ s.totalLignes }}</strong></div>
+          <div><span>Journaux mouvementes</span><strong>{{ s.nbJournaux }}</strong></div>
+          <div><span>Comptes distincts</span><strong>{{ s.nbComptesDistincts }}</strong></div>
+          <div><span>Total Debit</span><strong>{{ s.totalDebit | number: '1.2-2' }} €</strong></div>
+          <div><span>Total Credit</span><strong>{{ s.totalCredit | number: '1.2-2' }} €</strong></div>
+          <div [class.fec__ecart--ko]="!s.equilibre">
+            <span>Ecart</span><strong>{{ s.ecart | number: '1.2-2' }} €</strong>
+          </div>
+        </section>
+
+        <!-- Apercu des 10 premieres lignes (AC-09) -->
+        <section class="fec__group">
+          <h5>Apercu (10 premieres lignes au format FEC)</h5>
+          <div class="fec__preview-scroll">
+            <table class="fec__preview-table">
+              <thead>
+                <tr>
+                  @for (col of s.entetes; track $index) {
+                    <th>{{ col }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (ligne of s.apercu; track $index) {
+                  <tr>
+                    @for (cell of ligne; track $index) {
+                      <td>{{ cell }}</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="fec__actions">
+          <button
+            type="button"
+            class="fec__download"
+            [disabled]="!s.equilibre"
+            (click)="etapeSuivante()"
+          >
+            Etape suivante — Controle qualite
+          </button>
+        </div>
+      }
+    }
+
+    <!-- ====================== ETAPE 2 : CONTROLE (FEC-002+) ====================== -->
+    @if (etape === 'controle' && rapport) {
+      <div class="fec__head">
+        <p class="fec__meta">
+          {{ rapport.nbControlesPasses }}/{{ rapport.nbControles }} controle(s) passe(s) ·
+          {{ rapport.nbBloquants }} bloquant(s) ·
+          {{ rapport.nbAvertissements }} avertissement(s) ·
+          {{ rapport.nbCoherencePasses }}/8 coherence
+        </p>
+        <div class="fec__actions">
+          <button type="button" class="fec__refresh" (click)="retourPreparation()">
+            ← Preparation
+          </button>
+          <button type="button" class="fec__refresh" (click)="lancerControle()">
+            Verifier a nouveau
+          </button>
+          <button
+            type="button"
+            class="fec__download"
+            [disabled]="!rapport.exportPossible || generating"
+            (click)="genererFec()"
+          >
+            {{ generating ? 'Generation...' : 'Generer le FEC' }}
+          </button>
+        </div>
+      </div>
+
+      @if (rapport.exportPossible) {
+        <p class="fec__ok">
+          ✓ Controle reussi — 0 anomalie bloquante · {{ rapport.nbAvertissements }} avertissement(s)
+          @if (rapport.nbAvertissements > 0) { — verification recommandee }
+        </p>
+      } @else {
+        <p class="fec__blocked">
+          {{ rapport.nbBloquants }} anomalie(s) bloquante(s) — export impossible.
+        </p>
+      }
+
+      <!-- AC-11 : encadre « Corrections requises » priorise -->
+      @if (rapport.bloquants.length > 0) {
+        <section class="fec__corrections">
+          <h5>Corrections requises</h5>
+          <ol>
+            @for (a of rapport.bloquants; track $index) {
+              <li>{{ a.message }}@if (a.numeroEcriture) { (ecriture {{ a.numeroEcriture }}) }</li>
+            }
+          </ol>
+        </section>
+      }
+
+      @if (rapport.bloquants.length > 0) {
+        <section class="fec__group fec__group--bloquant">
+          <h5>Anomalies bloquantes</h5>
+          <ul>
+            @for (a of rapport.bloquants; track $index) {
+              <li>
+                <span class="fec__code">{{ a.code }}</span> {{ a.message }}
+                @if (a.numeroEcriture) {
+                  <button type="button" class="fec__link" (click)="voirEcriture(a.numeroEcriture)">
+                    Voir l'ecriture {{ a.numeroEcriture }}
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (rapport.avertissements.length > 0) {
+        <section class="fec__group fec__group--avert">
+          <h5>Avertissements</h5>
+          <ul>
+            @for (a of rapport.avertissements; track $index) {
+              <li><span class="fec__code">{{ a.code }}</span> {{ a.message }}</li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (rapport.coherence.length > 0) {
+        <section class="fec__group fec__group--coherence">
+          <h5>Coherence globale</h5>
+          <ul>
+            @for (a of rapport.coherence; track $index) {
+              <li>
+                <span class="fec__code">{{ a.code }}</span> {{ a.message }}
+                @if (a.numeroEcriture) {
+                  <button type="button" class="fec__link" (click)="voirEcriture(a.numeroEcriture)">
+                    Voir l'ecriture {{ a.numeroEcriture }}
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+
+    @if (historique.length > 0) {
+      <section class="fec__history">
+        <div class="fec__history-head">
+          <h5>Historique des exports</h5>
+          <label class="fec__filtre">
+            Exercice :
+            <select [value]="filtreExercice" (change)="filtreExercice = $any($event.target).value === 'tous' ? 'tous' : +$any($event.target).value">
+              <option value="tous">Tous</option>
+              @for (a of anneesHistorique; track a) {
+                <option [value]="a">{{ a }}</option>
+              }
+            </select>
+          </label>
+        </div>
+        <table class="fec__table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Utilisateur</th>
+              <th>Exercice</th>
+              <th>Lignes</th>
+              <th>Σ Debit</th>
+              <th>Σ Credit</th>
+              <th>Avert.</th>
+              <th>Statut</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (h of historiqueFiltre; track h.id) {
+              <tr class="fec__history-row" (click)="basculerDetail(h.id)">
+                <td>{{ h.date | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ h.utilisateur }}</td>
+                <td>{{ h.annee ?? '—' }}</td>
+                <td>{{ h.nbLignes }}</td>
+                <td>{{ h.sigmaDebit | number: '1.2-2' }} €</td>
+                <td>{{ h.sigmaCredit | number: '1.2-2' }} €</td>
+                <td>{{ h.nbAvertissements }}</td>
+                <td>
+                  <span class="fec__statut" [class]="'fec__statut--' + h.statut.toLowerCase()">
+                    {{ h.statut === 'SUCCES' ? '✓ Succes' : h.statut === 'PARTIEL' ? '⚠ Partiel' : '✗ Echec' }}
+                  </span>
+                  @if (h.valideCtrlDgfip) {
+                    <span class="fec__ctrl-ok" [title]="'Valide le ' + (h.dateValidationCtrl | date: 'dd/MM/yyyy')">✓ CTRL-DGFIP</span>
+                  }
+                </td>
+                <td class="fec__rowactions" (click)="$event.stopPropagation()">
+                  <button type="button" class="fec__relink" (click)="retelecharger(h.id)">Re-telecharger</button>
+                  @if (!h.valideCtrlDgfip) {
+                    <button type="button" class="fec__relink" (click)="validerCtrl(h)">Valider CTRL</button>
+                  }
+                </td>
+              </tr>
+              @if (detailOuvert === h.id) {
+                <tr class="fec__detail-row">
+                  <td colspan="9">
+                    <div class="fec__detail">
+                      <div><strong>Fichier :</strong> {{ h.filename }}</div>
+                      <div class="fec__detail-hash"><strong>SHA-256 :</strong> <code>{{ h.hashSha256 }}</code></div>
+                      <div><strong>Avertissements ({{ h.avertissements.length }}) :</strong></div>
+                      @if (h.avertissements.length > 0) {
+                        <ul>
+                          @for (a of h.avertissements; track $index) {
+                            <li>{{ a }}</li>
+                          }
+                        </ul>
+                      } @else {
+                        <div>Aucun avertissement au moment de l'export.</div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </section>
     }
   }
 </div>

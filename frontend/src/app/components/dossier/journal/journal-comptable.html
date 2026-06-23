@@ -11,7 +11,11 @@
   } @else {
     <ul class="journal__list">
       @for (e of ecritures; track e.id) {
-        <li class="journal__item">
+        <li
+          class="journal__item"
+          [id]="'ecr-' + e.id"
+          [class.journal__item--highlight]="e.numeroOperation === highlightNumero"
+        >
           <div class="journal__item-head">
             <span class="journal__numero">{{ e.numeroOperation }}</span>
             <span class="journal__badge">{{ e.statut }}</span>

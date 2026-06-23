@@ -17,13 +17,16 @@
   <div class="saisie__panel">
     @switch (actif) {
       @case ('journal') {
-        <app-journal-comptable [client]="client" />
+        <app-journal-comptable [client]="client" [highlightNumero]="ecritureCible" />
       }
       @case ('grand-livre') {
         <app-grand-livre [client]="client" />
       }
       @case ('fec') {
-        <app-fec [client]="client" />
+        <app-fec [client]="client" (ouvrirEcriture)="ouvrirEcriture($event)" />
+      }
+      @case ('devis') {
+        <app-devis [client]="client" />
       }
     }
   </div>

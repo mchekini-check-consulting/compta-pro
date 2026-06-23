@@ -49,21 +49,338 @@
     &:disabled { opacity: 0.5; cursor: default; }
   }
 
-  &__caption {
-    margin: 0;
-    font-size: 0.78rem;
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__exercice {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+
+    select {
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 0.35rem 0.5rem;
+      font: inherit;
+    }
+  }
+
+  &__exercice-info {
     color: #6b7280;
   }
 
-  &__preview {
+  &__link {
+    margin-left: 0.4rem;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #b91c1c;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: inherit;
+  }
+
+  &__alert {
     margin: 0;
-    padding: 0.75rem;
-    background: #1a1a2e;
-    color: #e5e7eb;
+    padding: 0.5rem 0.75rem;
     border-radius: 8px;
-    font-size: 0.72rem;
-    line-height: 1.5;
+    font-size: 0.82rem;
+    font-weight: 600;
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+
+    &--bloquant {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+  }
+
+  &__global {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      padding: 0.5rem 0.75rem;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+
+      span {
+        font-size: 0.72rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      strong {
+        font-size: 0.95rem;
+      }
+    }
+  }
+
+  &__ecart--ko strong {
+    color: #b91c1c;
+  }
+
+  &__preview-scroll {
     overflow-x: auto;
-    white-space: pre;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+
+  &__preview-table {
+    border-collapse: collapse;
+    font-size: 0.68rem;
+    white-space: nowrap;
+
+    th,
+    td {
+      padding: 0.3rem 0.5rem;
+      border-bottom: 1px solid #eef0f3;
+      border-right: 1px solid #f3f4f6;
+      text-align: left;
+    }
+
+    th {
+      background: #1a1a2e;
+      color: #e5e7eb;
+      position: sticky;
+      top: 0;
+    }
+  }
+
+  &__refresh {
+    background: #fff;
+    color: #1a1a2e;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover { background: #f3f4f6; }
+  }
+
+  &__success,
+  &__ok {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #15803d;
+    font-weight: 600;
+  }
+
+  &__blocked {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #b91c1c;
+    font-weight: 600;
+  }
+
+  &__group {
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+
+    h5 {
+      margin: 0 0 0.4rem;
+      font-size: 0.82rem;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    li {
+      font-size: 0.8rem;
+      color: #374151;
+    }
+
+    &--bloquant {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      h5 { color: #b91c1c; }
+    }
+
+    &--avert {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      h5 { color: #b45309; }
+    }
+
+    &--coherence {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      h5 { color: #1d4ed8; }
+    }
+  }
+
+  &__hash {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #6b7280;
+
+    code {
+      font-family: monospace;
+      word-break: break-all;
+      color: #1a1a2e;
+    }
+  }
+
+  &__history-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__filtre {
+    font-size: 0.8rem;
+    color: #6b7280;
+
+    select {
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 0.3rem 0.5rem;
+      font: inherit;
+      margin-left: 0.3rem;
+    }
+  }
+
+  &__history-row {
+    cursor: pointer;
+
+    &:hover {
+      background: #f9fafb;
+    }
+  }
+
+  &__statut {
+    font-weight: 600;
+    white-space: nowrap;
+
+    &--succes { color: #15803d; }
+    &--partiel { color: #b45309; }
+    &--echec { color: #b91c1c; }
+  }
+
+  &__ctrl-ok {
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #15803d;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  &__detail-row td {
+    background: #f9fafb;
+  }
+
+  &__detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+
+    code {
+      font-family: monospace;
+      word-break: break-all;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 1.2rem;
+      color: #b45309;
+    }
+  }
+
+  &__corrections {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+
+    h5 {
+      margin: 0 0 0.4rem;
+      font-size: 0.82rem;
+      color: #b91c1c;
+    }
+
+    ol {
+      margin: 0;
+      padding-left: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.82rem;
+      color: #374151;
+    }
+  }
+
+  &__code {
+    display: inline-block;
+    min-width: 4.5rem;
+    font-weight: 700;
+    font-family: monospace;
+    color: #1a1a2e;
+  }
+
+  &__history {
+    h5 {
+      margin: 0 0 0.5rem;
+      font-size: 0.85rem;
+      color: #1a1a2e;
+    }
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      color: #6b7280;
+      font-weight: 600;
+    }
+  }
+
+  &__relink {
+    background: #fff;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover { background: #f0fdf4; }
   }
 }
