@@ -393,6 +393,59 @@
     li { margin-bottom: 0.2rem; }
   }
 
+  // --- Resultat de generation (FEC-003) ---
+  &__generation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    border: 1px solid #bbf7d0;
+    background: #f0fdf4;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+
+    h5 { margin: 0; font-size: 0.82rem; color: #1a1a2e; }
+  }
+
+  &__specs {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+
+    td {
+      padding: 0.35rem 0.6rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    td:first-child { color: #6b7280; width: 32%; }
+    td:nth-child(2) { font-family: monospace; }
+  }
+
+  &__conforme {
+    color: #15803d;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  &__apercu-fichier {
+    margin: 0;
+    padding: 0.75rem;
+    background: #1a1a2e;
+    color: #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  &__apercu-entete {
+    color: #60a5fa;
+    font-weight: 700;
+  }
+
   &__corrections {
     background: #fef2f2;
     border: 1px solid #fecaca;

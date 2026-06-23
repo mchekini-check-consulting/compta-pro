@@ -105,8 +105,20 @@ public class FecController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + fichier.filename() + "\"")
+                // Metadonnees d'integrite exposees au frontend (FEC-003 AC-02/03/08).
+                .header("X-Fec-Sha256", fichier.hashSha256())
+                .header("X-Fec-Sigma-Debit", String.valueOf(fichier.sigmaDebit()))
+                .header("X-Fec-Sigma-Credit", String.valueOf(fichier.sigmaCredit()))
+                .header("X-Fec-Lignes", String.valueOf(fichier.nbLignes()))
                 .contentType(new MediaType("text", "plain", StandardCharsets.UTF_8))
                 .body(body);
+    }
+
+    /** Echec technique de generation : 500 (AC-10). */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<String> handleErreurGeneration(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erreur interne lors de la generation du FEC — contacter le support");
     }
 
     /** Export bloque par une anomalie bloquante : 409 + rapport de controle. */

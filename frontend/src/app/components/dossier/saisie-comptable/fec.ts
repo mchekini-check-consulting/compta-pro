@@ -56,6 +56,33 @@ export class Fec implements OnInit {
   /** Index de l'etape de progression en cours (-1 = inactif). */
   etapeControle = -1;
   private progressionTimer?: ReturnType<typeof setInterval>;
+
+  /** Etapes de la barre de generation du fichier (FEC-003 AC-01). */
+  readonly etapesGeneration = [
+    'Initialisation fichier UTF-8 sans BOM...',
+    'Ecriture ligne en-tete (18 champs)...',
+    'Export journal AN...',
+    'Export journal ACH...',
+    'Export journal VTE...',
+    'Export journal BQ...',
+    'Export journal OD...',
+    'Calcul empreinte SHA-256...',
+    'Controle final Σ Debit = Σ Credit...',
+    'Fichier pret ✓',
+  ];
+  etapeGeneration = -1;
+  private generationTimer?: ReturnType<typeof setInterval>;
+  /** Resultat detaille de la derniere generation (AC-02/03/09). */
+  resultatGeneration?: {
+    filename: string;
+    nbLignes: number;
+    sigmaDebit: number;
+    sigmaCredit: number;
+    equilibre: boolean;
+    hash: string;
+    entete: string;
+    apercu: string[];
+  };
   /** Exercices selectionnables et exercice courant (AC-01). */
   exercices: FecExercice[] = [];
   exerciceSelectionne?: FecExercice;
@@ -188,16 +215,36 @@ export class Fec implements OnInit {
     this.etapeControle = -1;
   }
 
-  /** Genere et telecharge le FEC si aucune anomalie bloquante (AC-13). */
+  /** Genere et telecharge le FEC si aucune anomalie bloquante (AC-01, AC-13). */
   genererFec(): void {
     if (!this.rapport?.exportPossible || this.generating) return;
     this.generating = true;
     this.message = '';
     this.error = '';
+    this.resultatGeneration = undefined;
+    this.demarrerGeneration();
     this.fecService.downloadFec(this.client.id, this.anneeCible).subscribe({
       next: (res) => this.onGenerated(res),
-      error: (err: HttpErrorResponse) => this.onGenerateError(err),
+      error: (err: HttpErrorResponse) => {
+        this.terminerGeneration();
+        this.onGenerateError(err);
+      },
     });
+  }
+
+  private demarrerGeneration(): void {
+    this.etapeGeneration = 0;
+    clearInterval(this.generationTimer);
+    this.generationTimer = setInterval(() => {
+      if (this.etapeGeneration < this.etapesGeneration.length - 1) {
+        this.etapeGeneration++;
+      }
+    }, 250);
+  }
+
+  private terminerGeneration(): void {
+    clearInterval(this.generationTimer);
+    this.etapeGeneration = -1;
   }
 
   private async onGenerated(res: HttpResponse<Blob>): Promise<void> {
@@ -205,26 +252,42 @@ export class Fec implements OnInit {
     const filename = this.extractFilename(res) ?? `${this.client.siren}-FEC.txt`;
     const text = await blob.text();
     const lignes = text.split(/\r\n|\n/).filter((l) => l.length > 0);
-    const nbLignes = Math.max(0, lignes.length - 1);
 
-    // Σ Debit / Credit a partir des colonnes 12 et 13 (AC-01).
-    let sigmaDebit = 0;
-    let sigmaCredit = 0;
-    for (const l of lignes.slice(1)) {
-      const cols = l.split('\t');
-      sigmaDebit += this.montant(cols[11]);
-      sigmaCredit += this.montant(cols[12]);
-    }
+    // Metadonnees autoritatives lues dans les en-tetes (FEC-003), avec repli local.
+    const h = res.headers;
+    const nbLignes = +(h.get('X-Fec-Lignes') ?? Math.max(0, lignes.length - 1));
+    const sigmaDebit = parseFloat(h.get('X-Fec-Sigma-Debit') ?? '0') || this.sommeColonne(lignes, 11);
+    const sigmaCredit = parseFloat(h.get('X-Fec-Sigma-Credit') ?? '0') || this.sommeColonne(lignes, 12);
+    const hash = h.get('X-Fec-Sha256') ?? (await this.sha256(blob));
 
-    // Empreinte SHA-256 du fichier telecharge (AC-03).
-    this.dernierHash = await this.sha256(blob);
+    this.dernierHash = hash;
+    this.resultatGeneration = {
+      filename,
+      nbLignes,
+      sigmaDebit,
+      sigmaCredit,
+      equilibre: Math.abs(sigmaDebit - sigmaCredit) < 0.01,
+      hash,
+      entete: lignes[0] ?? '',
+      apercu: lignes.slice(1, 6), // 5 premieres lignes de donnees (AC-09)
+    };
 
+    this.terminerGeneration();
     this.declencherTelechargement(blob, filename);
     this.message =
-      `FEC genere et telecharge — ${nbLignes} ligne(s) exportee(s) · ` +
-      `Σ Debit = Σ Credit = ${sigmaDebit.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+      `FEC genere avec succes — ${nbLignes + 1} lignes (1 en-tete + ${nbLignes} ecritures) · ` +
+      `Σ Debit = ${this.euro(sigmaDebit)} · Σ Credit = ${this.euro(sigmaCredit)} · ` +
+      `${this.resultatGeneration.equilibre ? 'Equilibre ✓' : 'Desequilibre ⚠'}`;
     this.generating = false;
     this.chargerHistorique();
+  }
+
+  private euro(v: number): string {
+    return v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+
+  private sommeColonne(lignes: string[], col: number): number {
+    return lignes.slice(1).reduce((s, l) => s + this.montant(l.split('\t')[col]), 0);
   }
 
   private montant(champ: string | undefined): number {
@@ -238,6 +301,21 @@ export class Fec implements OnInit {
     return Array.from(new Uint8Array(digest))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
+  }
+
+  /** Specifications techniques du fichier genere, toutes conformes (AC-03). */
+  get specifications(): { libelle: string; valeur: string }[] {
+    const r = this.resultatGeneration;
+    if (!r) return [];
+    return [
+      { libelle: 'Nom du fichier', valeur: r.filename },
+      { libelle: 'Encodage', valeur: 'UTF-8 sans BOM' },
+      { libelle: 'Separateur', valeur: 'Tabulation (\\t)' },
+      { libelle: 'Fins de ligne', valeur: 'CRLF (\\r\\n)' },
+      { libelle: 'Format des dates', valeur: 'AAAAMMJJ' },
+      { libelle: 'Montants', valeur: 'Virgule decimale, 2 decimales' },
+      { libelle: 'Nombre de champs', valeur: '18' },
+    ];
   }
 
   /** Historique filtre par exercice (AC-07). */

@@ -103,8 +103,9 @@ public class FecService {
     private final FecExportRepository fecExportRepository;
     private final JournalLibelleResolver journalLibelleResolver;
 
-    /** Fichier FEC pret a etre telecharge (nom normalise + contenu texte). */
-    public record FecFile(String filename, String content) {}
+    /** Fichier FEC pret a etre telecharge, avec ses metadonnees d'integrite. */
+    public record FecFile(String filename, String content, String hashSha256,
+                          BigDecimal sigmaDebit, BigDecimal sigmaCredit, int nbLignes) {}
 
     /** Leve quand l'export est demande malgre des anomalies bloquantes (RG-008). */
     public static class FecBloquantException extends RuntimeException {
@@ -265,10 +266,18 @@ public class FecService {
             }
         }
 
+        // AC-10/RG : controle d'integrite post-generation Σ Debit = Σ Credit a 0,01 € pres.
+        if (sigmaDebit.subtract(sigmaCredit).abs().compareTo(new BigDecimal("0.01")) > 0) {
+            throw new IllegalStateException("Erreur interne de generation FEC : Σ Debit ≠ Σ Credit");
+        }
+
         // Nom reglementaire : [SIREN][JJMMAAAA]i.txt (RG-006).
         LocalDate dateCloture = clotureExercice(client, annee);
         String filename = client.getSiren() + dateCloture.format(NOM_DATE) + "i.txt";
         String contenu = sb.toString();
+        String hash = sha256(contenu);
+        BigDecimal sD = sigmaDebit.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal sC = sigmaCredit.setScale(2, RoundingMode.HALF_UP);
 
         // AC-10 : exercice non cloture (fin > aujourd'hui) => export partiel.
         StatutExportFec statut = dateCloture.isAfter(LocalDate.now())
@@ -287,17 +296,17 @@ public class FecService {
                 .nbLignes(nbLignes)
                 .nbBloquants(rapport.nbBloquants())
                 .nbAvertissements(rapport.nbAvertissements())
-                .sigmaDebit(sigmaDebit.setScale(2, RoundingMode.HALF_UP))
-                .sigmaCredit(sigmaCredit.setScale(2, RoundingMode.HALF_UP))
+                .sigmaDebit(sD)
+                .sigmaCredit(sC)
                 .statut(statut)
-                .hashSha256(sha256(contenu))
+                .hashSha256(hash)
                 .avertissementsTexte(avertissements)
                 .valideCtrlDgfip(false)
                 .filename(filename)
                 .contenu(contenu)
                 .build());
 
-        return new FecFile(filename, contenu);
+        return new FecFile(filename, contenu, hash, sD, sC, nbLignes);
     }
 
     /** Historique des exports d'un dossier, du plus recent au plus ancien (AC-04). */
@@ -314,7 +323,8 @@ public class FecService {
     public FecFile telechargerArchive(Long accountantId, Long exportId) {
         FecExport export = fecExportRepository.findByIdAndAccountantId(exportId, accountantId)
                 .orElseThrow(() -> new IllegalArgumentException("Export FEC non trouve"));
-        return new FecFile(export.getFilename(), export.getContenu());
+        return new FecFile(export.getFilename(), export.getContenu(), export.getHashSha256(),
+                export.getSigmaDebit(), export.getSigmaCredit(), export.getNbLignes());
     }
 
     /** Marque un export comme valide avec l'outil officiel CTRL-DGFIP (AC-09). */

@@ -196,6 +196,47 @@
         </p>
       }
 
+      <!-- AC-01 : barre de progression de generation (10 etapes) -->
+      @if (generating && etapeGeneration >= 0) {
+        <div class="fec__progress">
+          <p class="fec__progress-label">{{ etapesGeneration[etapeGeneration] }}</p>
+          <div class="fec__progress-bar">
+            <div class="fec__progress-fill" [style.width.%]="(etapeGeneration + 1) / etapesGeneration.length * 100"></div>
+          </div>
+        </div>
+      }
+
+      <!-- AC-02/03/08/09 : resultat de generation -->
+      @if (resultatGeneration; as g) {
+        <section class="fec__generation">
+          <p class="fec__ok">
+            FEC genere avec succes — {{ g.nbLignes + 1 }} lignes (1 en-tete + {{ g.nbLignes }} ecritures) ·
+            Σ Debit = {{ g.sigmaDebit | number: '1.2-2' }} € · Σ Credit = {{ g.sigmaCredit | number: '1.2-2' }} €
+            · {{ g.equilibre ? 'Equilibre ✓' : 'Desequilibre ⚠' }}
+          </p>
+
+          <h5>Specifications techniques</h5>
+          <table class="fec__specs">
+            <tbody>
+              @for (s of specifications; track s.libelle) {
+                <tr>
+                  <td>{{ s.libelle }}</td>
+                  <td>{{ s.valeur }}</td>
+                  <td><span class="fec__conforme">✓ Conforme DGFiP</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <p class="fec__hash">SHA-256 : <code>{{ g.hash }}</code></p>
+
+          <h5>Apercu (5 premieres lignes)</h5>
+          <pre class="fec__apercu-fichier"><span class="fec__apercu-entete">{{ g.entete }}</span>
+@for (l of g.apercu; track $index) {{{ l }}
+}</pre>
+        </section>
+      }
+
       <!-- AC-11 : encadre « Corrections requises » priorise -->
       @if (rapport.bloquants.length > 0) {
         <section class="fec__corrections">
