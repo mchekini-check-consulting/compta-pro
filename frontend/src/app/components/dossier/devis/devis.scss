@@ -1,0 +1,227 @@
+.devis {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.85rem;
+
+  &__head,
+  &__formhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  &__loading,
+  &__empty {
+    color: #6b7280;
+  }
+
+  &__success {
+    color: #15803d;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__error {
+    color: #b91c1c;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__primary {
+    background: linear-gradient(135deg, #0f7a5f, #0c6b52);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.55rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled { opacity: 0.5; cursor: default; }
+  }
+
+  &__secondary {
+    background: #fff;
+    color: #1a1a2e;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0.55rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  &__table,
+  &__lines {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.45rem 0.6rem;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+
+    th { color: #6b7280; font-weight: 600; }
+  }
+
+  &__rowactions button {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    margin-right: 0.3rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+
+    &:hover { background: #f3f4f6; }
+  }
+
+  // --- Badges de statut (RG-004) ---
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  &__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &__badge--brouillon { background: #f3f4f6; color: #4b5563; }
+  &__badge--envoye { background: #eff6ff; color: #1d4ed8; }
+  &__badge--attente { background: #fbf3e2; color: #9a6b14; }
+  &__badge--signe { background: #ecfdf5; color: #15803d; }
+  &__badge--refuse { background: #fef2f2; color: #b91c1c; }
+  &__badge--expire { background: #e5e7eb; color: #374151; }
+
+  // --- Formulaire ---
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+  }
+
+  input,
+  select,
+  textarea {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0.4rem 0.5rem;
+    font: inherit;
+    color: #1a1a2e;
+    width: 100%;
+  }
+
+  &__detail {
+    margin-top: 0.25rem;
+    color: #6b7280;
+    font-size: 0.78rem;
+  }
+
+  &__lineht { font-weight: 600; white-space: nowrap; }
+
+  &__del {
+    background: none;
+    border: none;
+    color: #b91c1c;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+
+  &__addline {
+    align-self: flex-start;
+    background: #fff;
+    border: 1px dashed #9ca3af;
+    border-radius: 6px;
+    padding: 0.4rem 0.7rem;
+    cursor: pointer;
+    color: #374151;
+  }
+
+  &__totaux {
+    margin-left: auto;
+    width: min(320px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+
+    > div {
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+
+  &__ttc {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 0.3rem;
+    font-size: 0.95rem;
+  }
+
+  &__acompte-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+    color: #374151;
+
+    input[type='checkbox'] { width: auto; }
+  }
+
+  &__acompte-taux { width: 4rem; }
+
+  &__acompte {
+    display: flex;
+    justify-content: space-between;
+    border: 1px dashed #9a6b14;
+    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+    color: #9a6b14;
+    font-weight: 600;
+  }
+
+  &__mentions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+
+  &__formactions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}

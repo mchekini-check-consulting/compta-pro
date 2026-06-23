@@ -1,0 +1,161 @@
+<div class="devis">
+  @if (apercu(); as d) {
+    <app-devis-document [devis]="d" (fermer)="fermerApercu()" />
+  } @else {
+  @if (message()) {
+    <p class="devis__success">{{ message() }}</p>
+  }
+  @if (error()) {
+    <p class="devis__error">{{ error() }}</p>
+  }
+
+  @if (!enCreation()) {
+    <div class="devis__head">
+      <h4 class="devis__title">Devis</h4>
+      <button type="button" class="devis__primary" (click)="nouveau()">Nouveau devis</button>
+    </div>
+
+    @if (loading()) {
+      <p class="devis__loading">Chargement...</p>
+    } @else if (devisList().length === 0) {
+      <p class="devis__empty">Aucun devis pour ce dossier.</p>
+    } @else {
+      <table class="devis__table">
+        <thead>
+          <tr>
+            <th>Numero</th>
+            <th>Emission</th>
+            <th>Validite</th>
+            <th>Total TTC</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of devisList(); track d.id) {
+            <tr>
+              <td>{{ d.numero }}</td>
+              <td>{{ d.dateEmission | date: 'dd/MM/yyyy' }}</td>
+              <td>{{ d.dateValidite | date: 'dd/MM/yyyy' }}</td>
+              <td>{{ d.totalTTC | number: '1.2-2' }} &euro;</td>
+              <td>
+                <span class="devis__badge" [class]="statutMeta[d.statut].classe">
+                  <span class="devis__dot"></span>{{ statutMeta[d.statut].label }}
+                </span>
+              </td>
+              <td class="devis__rowactions">
+                <button type="button" (click)="ouvrirApercu(d)">Apercu / PDF</button>
+                @if (d.statut === 'BROUILLON') {
+                  <button type="button" (click)="changerStatut(d, 'ENVOYE')">Envoyer</button>
+                }
+                @if (d.statut === 'ENVOYE' || d.statut === 'EN_ATTENTE_SIGNATURE') {
+                  <button type="button" (click)="changerStatut(d, 'SIGNE')">Signe</button>
+                  <button type="button" (click)="changerStatut(d, 'REFUSE')">Refuse</button>
+                }
+                @if (d.statut === 'EXPIRE' || d.statut === 'REFUSE') {
+                  <button type="button" (click)="relancer(d)">Relancer</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  } @else {
+    <!-- Formulaire de creation -->
+    <form class="devis__form" [formGroup]="form" (ngSubmit)="enregistrer()">
+      <div class="devis__formhead">
+        <h4 class="devis__title">Nouveau devis @if (numeroApercu()) { · {{ numeroApercu() }} }</h4>
+        <span class="devis__badge devis__badge--attente">
+          <span class="devis__dot"></span>En attente de signature
+        </span>
+      </div>
+
+      <div class="devis__grid">
+        <label>
+          A l'attention de
+          <input type="text" formControlName="clientAttention" placeholder="Contact destinataire" />
+        </label>
+        <label>
+          Date d'emission
+          <input type="date" formControlName="dateEmission" />
+        </label>
+        <label>
+          Debut de prestation
+          <input type="date" formControlName="dateDebutPrestation" />
+        </label>
+        <label>
+          Validite
+          <input type="date" formControlName="dateValidite" />
+        </label>
+      </div>
+
+      <table class="devis__lines" formArrayName="lignes">
+        <thead>
+          <tr>
+            <th>Designation</th>
+            <th>Qte</th>
+            <th>P.U. HT</th>
+            <th>TVA</th>
+            <th>Total HT</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ligne of lignes.controls; track $index) {
+            <tr [formGroupName]="$index">
+              <td>
+                <input type="text" formControlName="designation" placeholder="Designation" />
+                <input type="text" formControlName="detail" class="devis__detail" placeholder="Detail (facultatif)" />
+              </td>
+              <td><input type="number" formControlName="quantite" step="0.001" min="0" /></td>
+              <td><input type="number" formControlName="prixUnitaireHT" step="0.01" min="0" /></td>
+              <td>
+                <select formControlName="tauxTva">
+                  @for (t of tauxTva; track t) {
+                    <option [ngValue]="t">{{ t }} %</option>
+                  }
+                </select>
+              </td>
+              <td class="devis__lineht">{{ ligneTotalHT($index) | number: '1.2-2' }} &euro;</td>
+              <td>
+                <button type="button" class="devis__del" (click)="supprimerLigne($index)" aria-label="Supprimer">&times;</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <button type="button" class="devis__addline" (click)="ajouterLigne()">+ Ajouter une ligne</button>
+
+      <div class="devis__totaux">
+        <div><span>Total HT</span><strong>{{ totalHT | number: '1.2-2' }} &euro;</strong></div>
+        <div><span>TVA</span><strong>{{ totalTVA | number: '1.2-2' }} &euro;</strong></div>
+        <div class="devis__ttc"><span>Total TTC</span><strong>{{ totalTTC | number: '1.2-2' }} &euro;</strong></div>
+
+        <label class="devis__acompte-toggle">
+          <input type="checkbox" formControlName="acompteActif" />
+          Acompte
+          <input type="number" formControlName="acompteTaux" min="0" max="100" step="1" class="devis__acompte-taux" />
+          %
+        </label>
+        @if (form.value.acompteActif) {
+          <div class="devis__acompte">
+            <span>Acompte a verser ({{ form.value.acompteTaux }} %)</span>
+            <strong>{{ acompteMontant | number: '1.2-2' }} &euro;</strong>
+          </div>
+        }
+      </div>
+
+      <label class="devis__mentions">
+        Mentions legales
+        <textarea formControlName="mentionsLegales" rows="3" placeholder="Laisser vide pour les mentions par defaut"></textarea>
+      </label>
+
+      <div class="devis__formactions">
+        <button type="button" class="devis__secondary" (click)="annuler()">Annuler</button>
+        <button type="submit" class="devis__primary" [disabled]="form.invalid">Enregistrer le devis</button>
+      </div>
+    </form>
+  }
+  }
+</div>

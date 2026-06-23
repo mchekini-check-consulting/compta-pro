@@ -67,3 +67,38 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(0, 102, 255, 0.2);
   color: #0066ff;
 }
+
+/* ----------------------------------------------------------------------------
+   Impression / export PDF des documents (devis, facture) — US Impression
+   RG-001 A4 marges 14mm · RG-002 chrome masque · .paper pleine largeur
+---------------------------------------------------------------------------- */
+@page {
+  size: A4;
+  margin: 14mm;
+}
+
+@media print {
+  /* RG-002 : la barre chrome (en-tete + sidebar) disparait a l'impression. */
+  .app-chrome {
+    display: none !important;
+  }
+
+  /* Elements d'interface non imprimables (toolbars, boutons). */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Le document occupe 100% de la largeur de page, sans ombre ni bordure. */
+  .paper {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Neutralise les marges/fonds de l'app pour ne laisser que le papier. */
+  body {
+    background: #fff !important;
+  }
+}

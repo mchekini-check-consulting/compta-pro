@@ -1,0 +1,118 @@
+<div class="docview">
+  <!-- Barre d'actions, non imprimee -->
+  <div class="docview__toolbar no-print">
+    <button type="button" class="docview__back" (click)="fermer.emit()">&larr; Retour</button>
+    <button type="button" class="docview__print" (click)="imprimer()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
+      </svg>
+      Imprimer / PDF
+    </button>
+  </div>
+
+  <article class="paper">
+    @if (showPaidStamp) {
+      <div class="paper__stamp">PAYE</div>
+    }
+
+    <header class="paper__head">
+      <div class="paper__brand">
+        <div class="paper__logo">{{ devis.emetteur.raisonSociale.charAt(0) || 'C' }}</div>
+        <div>
+          <div class="paper__emetteur-nom">{{ devis.emetteur.raisonSociale }}</div>
+          <div class="paper__emetteur-coord">{{ devis.emetteur.adresse }}</div>
+          <div class="paper__emetteur-coord">SIRET {{ devis.emetteur.siret }}<span *ngIf="devis.emetteur.tvaIntra"> · TVA {{ devis.emetteur.tvaIntra }}</span></div>
+          <div class="paper__emetteur-coord">{{ devis.emetteur.email }} · {{ devis.emetteur.telephone }}</div>
+        </div>
+      </div>
+      <div class="paper__titre">
+        <h1>DEVIS</h1>
+        <div class="paper__numero">{{ devis.numero }}</div>
+        <span class="paper__badge">{{ statutLabel[devis.statut] }}</span>
+      </div>
+    </header>
+
+    <section class="paper__parties">
+      <div>
+        <h3>Emetteur</h3>
+        <p>{{ devis.emetteur.raisonSociale }}<br />{{ devis.emetteur.adresse }}</p>
+      </div>
+      <div>
+        <h3>Adresse a</h3>
+        <p>
+          {{ devis.destinataire.raisonSociale }}
+          <span *ngIf="devis.destinataire.attention"><br />A l'attention de {{ devis.destinataire.attention }}</span>
+          <span *ngIf="devis.destinataire.adresse"><br />{{ devis.destinataire.adresse }}</span>
+          <span *ngIf="devis.destinataire.siret"><br />SIRET {{ devis.destinataire.siret }}</span>
+        </p>
+      </div>
+    </section>
+
+    <section class="paper__dates">
+      <span><strong>Date d'emission :</strong> {{ devis.dateEmission | date: 'dd MMMM yyyy' }}</span>
+      <span *ngIf="devis.dateDebutPrestation"><strong>Debut de prestation :</strong> {{ devis.dateDebutPrestation | date: 'dd MMMM yyyy' }}</span>
+      <span><strong>Validite du devis :</strong> {{ devis.dateValidite | date: 'dd MMMM yyyy' }}</span>
+    </section>
+
+    <table class="paper__lines">
+      <thead>
+        <tr>
+          <th>Designation</th>
+          <th>Qte</th>
+          <th>P.U. HT</th>
+          <th>TVA</th>
+          <th>Total HT</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (l of devis.lignes; track l.id) {
+          <tr>
+            <td>
+              <div class="paper__desig">{{ l.designation }}</div>
+              <div class="paper__detail" *ngIf="l.detail">{{ l.detail }}</div>
+            </td>
+            <td>{{ l.quantite | number: '1.0-3' }}</td>
+            <td>{{ l.prixUnitaireHT | number: '1.2-2' }} &euro;</td>
+            <td>{{ l.tauxTva | number: '1.0-2' }} %</td>
+            <td>{{ l.totalHT | number: '1.2-2' }} &euro;</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <section class="paper__totaux">
+      <div><span>Total HT</span><span>{{ devis.totalHT | number: '1.2-2' }} &euro;</span></div>
+      <div><span>TVA</span><span>{{ devis.totalTVA | number: '1.2-2' }} &euro;</span></div>
+      <div class="paper__ttc"><span>Total TTC</span><span>{{ devis.totalTTC | number: '1.2-2' }} &euro;</span></div>
+      @if (devis.acompteActif) {
+        <div class="paper__acompte">
+          <span>Acompte a verser ({{ devis.acompteTaux | number: '1.0-2' }} %)</span>
+          <span>{{ devis.acompteMontant | number: '1.2-2' }} &euro;</span>
+        </div>
+      }
+    </section>
+
+    @if (mentionsLignes.length > 0) {
+      <section class="paper__mentions">
+        <h4>Mentions legales</h4>
+        <ul>
+          @for (m of mentionsLignes; track $index) {
+            <li>{{ m }}</li>
+          }
+        </ul>
+      </section>
+    }
+
+    <!-- Bloc signature (mode Devis uniquement — AC-10 US-F-001) -->
+    <section class="paper__signature">
+      <div class="paper__signature-box">
+        <div class="paper__signature-titre">Bon pour accord</div>
+        <div class="paper__signature-mention">« {{ mentionSignature }} »</div>
+        <div class="paper__signature-lignes">
+          <span>Date :</span>
+          <span>Signature :</span>
+        </div>
+      </div>
+    </section>
+  </article>
+</div>
