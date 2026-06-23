@@ -44,6 +44,18 @@ export class Fec implements OnInit {
   detailOuvert?: number;
   /** Empreinte SHA-256 du dernier fichier genere (AC-03). */
   dernierHash = '';
+
+  /** Etapes de la barre de progression du controle (AC-01). */
+  readonly etapesControle = [
+    'Controle BLQ-001 — Equilibre des ecritures...',
+    'Controles BLQ-002/003/004 — Numeros, comptes et dates...',
+    'Controles BLQ-005 a 008 — Montants et balance...',
+    'Controles AVT-001 a 005 — Avertissements...',
+    'Controles COH-001 a 008 — Coherence globale...',
+  ];
+  /** Index de l'etape de progression en cours (-1 = inactif). */
+  etapeControle = -1;
+  private progressionTimer?: ReturnType<typeof setInterval>;
   /** Exercices selectionnables et exercice courant (AC-01). */
   exercices: FecExercice[] = [];
   exerciceSelectionne?: FecExercice;
@@ -139,21 +151,41 @@ export class Fec implements OnInit {
     });
   }
 
-  /** (Re)lance le controle de conformite (AC-02, AC-05). */
+  /** (Re)lance les 21 controles avec barre de progression (AC-01, AC-10). */
   lancerControle(): void {
     this.loading = true;
     this.error = '';
     this.message = '';
+    this.rapport = undefined;
+    this.demarrerProgression();
     this.fecService.controle(this.client.id, this.anneeCible).subscribe({
       next: (rapport) => {
+        this.terminerProgression();
         this.rapport = rapport;
         this.loading = false;
       },
       error: () => {
+        this.terminerProgression();
         this.error = 'Impossible de lancer le controle de conformite.';
         this.loading = false;
       },
     });
+  }
+
+  private demarrerProgression(): void {
+    this.etapeControle = 0;
+    clearInterval(this.progressionTimer);
+    // Defile les libelles d'etape tant que le controle s'execute (AC-01).
+    this.progressionTimer = setInterval(() => {
+      if (this.etapeControle < this.etapesControle.length - 1) {
+        this.etapeControle++;
+      }
+    }, 400);
+  }
+
+  private terminerProgression(): void {
+    clearInterval(this.progressionTimer);
+    this.etapeControle = -1;
   }
 
   /** Genere et telecharge le FEC si aucune anomalie bloquante (AC-13). */

@@ -51,6 +51,15 @@ export interface FecSynthese {
   apercu: string[][];
 }
 
+/** Resultat d'un controle du catalogue (AC-02). */
+export interface FecControleResultat {
+  code: string;
+  type: 'BLOQUANT' | 'AVERTISSEMENT' | 'COHERENCE';
+  description: string;
+  ok: boolean;
+  anomalies: FecAnomalie[];
+}
+
 /** Rapport du controle qualite des 21 regles DGFiP (FEC-002). */
 export interface FecControleRapport {
   nbControles: number;
@@ -62,6 +71,7 @@ export interface FecControleRapport {
   bloquants: FecAnomalie[];
   avertissements: FecAnomalie[];
   coherence: FecAnomalie[];
+  controles: FecControleResultat[];
 }
 
 export type StatutExportFec = 'SUCCES' | 'PARTIEL' | 'ECHEC';

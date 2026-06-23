@@ -317,6 +317,82 @@
     }
   }
 
+  // --- Barre de progression du controle (AC-01) ---
+  &__progress {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 0;
+  }
+
+  &__progress-label {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1d4ed8;
+  }
+
+  &__progress-bar {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1d4ed8, #16a34a);
+    border-radius: 999px;
+    transition: width 0.35s ease;
+  }
+
+  // --- Tableau des 21 controles (AC-02) ---
+  &__controles {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+
+    th { color: #6b7280; font-weight: 600; }
+  }
+
+  &__ctrl-ko {
+    background: #fef2f2;
+  }
+
+  &__type {
+    display: inline-block;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+
+    &--bloquant { background: #fef2f2; color: #b91c1c; }
+    &--avertissement { background: #fffbeb; color: #b45309; }
+    &--coherence { background: #eff6ff; color: #1d4ed8; }
+  }
+
+  &__resultat-ok {
+    color: #15803d;
+    font-weight: 600;
+  }
+
+  &__resultat-ko {
+    margin: 0;
+    padding-left: 1rem;
+    color: #b91c1c;
+
+    li { margin-bottom: 0.2rem; }
+  }
+
   &__corrections {
     background: #fef2f2;
     border: 1px solid #fecaca;

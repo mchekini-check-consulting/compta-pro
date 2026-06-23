@@ -1,6 +1,15 @@
 <div class="fec">
   @if (loading) {
-    <p class="fec__loading">Collecte des ecritures en cours...</p>
+    @if (etapeControle >= 0) {
+      <div class="fec__progress">
+        <p class="fec__progress-label">{{ etapesControle[etapeControle] }}</p>
+        <div class="fec__progress-bar">
+          <div class="fec__progress-fill" [style.width.%]="(etapeControle + 1) / etapesControle.length * 100"></div>
+        </div>
+      </div>
+    } @else {
+      <p class="fec__loading">Collecte des ecritures en cours...</p>
+    }
   } @else if (error && !synthese && !rapport) {
     <p class="fec__error">{{ error }}</p>
   } @else {
@@ -199,52 +208,51 @@
         </section>
       }
 
-      @if (rapport.bloquants.length > 0) {
-        <section class="fec__group fec__group--bloquant">
-          <h5>Anomalies bloquantes</h5>
-          <ul>
-            @for (a of rapport.bloquants; track $index) {
-              <li>
-                <span class="fec__code">{{ a.code }}</span> {{ a.message }}
-                @if (a.numeroEcriture) {
-                  <button type="button" class="fec__link" (click)="voirEcriture(a.numeroEcriture)">
-                    Voir l'ecriture {{ a.numeroEcriture }}
-                  </button>
-                }
-              </li>
+      <!-- AC-02 : rapport tabulaire des 21 controles -->
+      <section class="fec__group">
+        <h5>Rapport de controle — 21 regles DGFiP</h5>
+        <table class="fec__controles">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Type</th>
+              <th>Controle</th>
+              <th>Resultat</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of rapport.controles; track c.code) {
+              <tr [class.fec__ctrl-ko]="!c.ok">
+                <td class="fec__code">{{ c.code }}</td>
+                <td>
+                  <span class="fec__type" [class]="'fec__type--' + c.type.toLowerCase()">
+                    {{ c.type === 'BLOQUANT' ? 'Bloquant' : c.type === 'AVERTISSEMENT' ? 'Avertissement' : 'Coherence' }}
+                  </span>
+                </td>
+                <td>{{ c.description }}</td>
+                <td>
+                  @if (c.ok) {
+                    <span class="fec__resultat-ok">✓ OK</span>
+                  } @else {
+                    <ul class="fec__resultat-ko">
+                      @for (a of c.anomalies; track $index) {
+                        <li>
+                          {{ a.message }}
+                          @if (a.numeroEcriture) {
+                            <button type="button" class="fec__link" (click)="voirEcriture(a.numeroEcriture)">
+                              Voir l'ecriture {{ a.numeroEcriture }}
+                            </button>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  }
+                </td>
+              </tr>
             }
-          </ul>
-        </section>
-      }
-
-      @if (rapport.avertissements.length > 0) {
-        <section class="fec__group fec__group--avert">
-          <h5>Avertissements</h5>
-          <ul>
-            @for (a of rapport.avertissements; track $index) {
-              <li><span class="fec__code">{{ a.code }}</span> {{ a.message }}</li>
-            }
-          </ul>
-        </section>
-      }
-
-      @if (rapport.coherence.length > 0) {
-        <section class="fec__group fec__group--coherence">
-          <h5>Coherence globale</h5>
-          <ul>
-            @for (a of rapport.coherence; track $index) {
-              <li>
-                <span class="fec__code">{{ a.code }}</span> {{ a.message }}
-                @if (a.numeroEcriture) {
-                  <button type="button" class="fec__link" (click)="voirEcriture(a.numeroEcriture)">
-                    Voir l'ecriture {{ a.numeroEcriture }}
-                  </button>
-                }
-              </li>
-            }
-          </ul>
-        </section>
-      }
+          </tbody>
+        </table>
+      </section>
     }
 
     @if (historique.length > 0) {

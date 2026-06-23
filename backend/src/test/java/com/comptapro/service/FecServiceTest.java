@@ -222,6 +222,27 @@ class FecServiceTest {
     }
 
     @Test
+    void catalogue_des_21_controles_avec_resultat() {
+        // Ecriture desequilibree en journal ACH (pas d'AN).
+        ecritures(ecriture("ACH", "000001", LocalDate.of(2026, 1, 15),
+                "607", new BigDecimal("6000.00"), "401", new BigDecimal("5500.00")));
+
+        FecControleRapport r = controle();
+
+        // Le catalogue expose les 21 controles dans l'ordre BLQ/AVT/COH.
+        assertThat(r.controles()).hasSize(21);
+        assertThat(r.controles().get(0).code()).isEqualTo("BLQ-001");
+        assertThat(r.controles()).extracting(c -> c.type()).contains("BLOQUANT", "AVERTISSEMENT", "COHERENCE");
+        // BLQ-001 en echec, avec ses anomalies pour le lien direct.
+        var blq001 = r.controles().stream().filter(c -> c.code().equals("BLQ-001")).findFirst().orElseThrow();
+        assertThat(blq001.ok()).isFalse();
+        assertThat(blq001.anomalies()).isNotEmpty();
+        // BLQ-005 sans anomalie => OK.
+        var blq005 = r.controles().stream().filter(c -> c.code().equals("BLQ-005")).findFirst().orElseThrow();
+        assertThat(blq005.ok()).isTrue();
+    }
+
+    @Test
     void coherence_an_absent_signale_coh001() {
         // Ecriture equilibree mais journal ACH (pas d'a-nouveaux).
         ecritures(ecriture("ACH", "000001", LocalDate.of(2026, 1, 15),

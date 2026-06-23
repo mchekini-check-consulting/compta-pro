@@ -16,6 +16,7 @@ import java.util.List;
  * @param bloquants          detail des anomalies bloquantes (BLQ)
  * @param avertissements     detail des avertissements (AVT)
  * @param coherence          detail des anomalies de coherence globale (COH)
+ * @param controles          catalogue des 21 controles avec leur resultat (AC-02)
  */
 public record FecControleRapport(
         int nbControles,
@@ -26,7 +27,20 @@ public record FecControleRapport(
         boolean exportPossible,
         List<Anomalie> bloquants,
         List<Anomalie> avertissements,
-        List<Anomalie> coherence) {
+        List<Anomalie> coherence,
+        List<ControleResultat> controles) {
+
+    /**
+     * Resultat d'un controle du catalogue pour le rapport tabulaire (AC-02).
+     *
+     * @param code        identifiant du controle (ex : BLQ-001)
+     * @param type        BLOQUANT, AVERTISSEMENT ou COHERENCE
+     * @param description libelle de la regle controlee
+     * @param ok          {@code true} si aucune anomalie pour ce controle
+     * @param anomalies   anomalies detectees pour ce controle (vide si OK)
+     */
+    public record ControleResultat(String code, String type, String description, boolean ok,
+                                   List<Anomalie> anomalies) {}
 
     /**
      * Anomalie detectee par un controle de conformite.

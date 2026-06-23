@@ -3,6 +3,7 @@ package com.comptapro.service;
 
 import com.comptapro.dto.FecControleRapport;
 import com.comptapro.dto.FecControleRapport.Anomalie;
+import com.comptapro.dto.FecControleRapport.ControleResultat;
 import com.comptapro.dto.FecExerciceResume;
 import com.comptapro.dto.FecExportResume;
 import com.comptapro.dto.FecSynthese;
@@ -62,6 +63,30 @@ public class FecService {
     private static final int NB_CONTROLES = 21;
     /** Nombre de controles de coherence globale (COH-001 a COH-008). */
     private static final int NB_COHERENCE = 8;
+
+    /** Catalogue des 21 controles : {code, type, description} dans l'ordre BLQ/AVT/COH. */
+    private static final List<String[]> CATALOGUE = List.of(
+            new String[]{"BLQ-001", "BLOQUANT", "Σ Debit = Σ Credit par ecriture"},
+            new String[]{"BLQ-002", "BLOQUANT", "EcritureNum non vide et unique par journal"},
+            new String[]{"BLQ-003", "BLOQUANT", "CompteNum non vide et >= 3 caracteres"},
+            new String[]{"BLQ-004", "BLOQUANT", "EcritureDate au format AAAAMMJJ et dans l'exercice"},
+            new String[]{"BLQ-005", "BLOQUANT", "Debit et Credit non nuls simultanement interdits"},
+            new String[]{"BLQ-006", "BLOQUANT", "Ligne a montants nuls interdite"},
+            new String[]{"BLQ-007", "BLOQUANT", "ValidDate non vide et >= EcritureDate"},
+            new String[]{"BLQ-008", "BLOQUANT", "Balance globale Σ D = Σ C sur l'exercice"},
+            new String[]{"AVT-001", "AVERTISSEMENT", "CompteNum reference dans le PCG officiel"},
+            new String[]{"AVT-002", "AVERTISSEMENT", "EcritureLib non vide (recommande)"},
+            new String[]{"AVT-003", "AVERTISSEMENT", "PieceRef non vide (recommande)"},
+            new String[]{"AVT-004", "AVERTISSEMENT", "CompAuxLib requis si CompAuxNum renseigne"},
+            new String[]{"AVT-005", "AVERTISSEMENT", "Idevise requis si Montantdevise renseigne"},
+            new String[]{"COH-001", "COHERENCE", "Journal AN present (a-nouveaux)"},
+            new String[]{"COH-002", "COHERENCE", "EcritureNum sequentiel sans trou par journal"},
+            new String[]{"COH-003", "COHERENCE", "PieceDate <= EcritureDate"},
+            new String[]{"COH-004", "COHERENCE", "DateLet renseigne ssi EcritureLet renseigne"},
+            new String[]{"COH-005", "COHERENCE", "44551 et 44567 non nuls simultanement = anomalie"},
+            new String[]{"COH-006", "COHERENCE", "TVA immobilisations sur 44562, pas 44566"},
+            new String[]{"COH-007", "COHERENCE", "Aucun montant Debit ou Credit negatif"},
+            new String[]{"COH-008", "COHERENCE", "ValidDate dans l'exercice"});
 
     private static final List<String> ENTETES = List.of(
             "JournalCode", "JournalLib", "EcritureNum", "EcritureDate", "CompteNum",
@@ -520,9 +545,21 @@ public class FecService {
         int passes = NB_CONTROLES - codesEnDefaut.size();
         long cohEnDefaut = codesEnDefaut.stream().filter(c -> c.startsWith("COH")).count();
         int coherencePasses = NB_COHERENCE - (int) cohEnDefaut;
+
+        // Catalogue tabulaire des 21 controles avec leur resultat (AC-02).
+        Map<String, List<Anomalie>> parCode = new HashMap<>();
+        for (Anomalie a : bloquants) parCode.computeIfAbsent(a.code(), c -> new ArrayList<>()).add(a);
+        for (Anomalie a : avertissements) parCode.computeIfAbsent(a.code(), c -> new ArrayList<>()).add(a);
+        for (Anomalie a : coherence) parCode.computeIfAbsent(a.code(), c -> new ArrayList<>()).add(a);
+        List<ControleResultat> controles = new ArrayList<>();
+        for (String[] regle : CATALOGUE) {
+            List<Anomalie> anomalies = parCode.getOrDefault(regle[0], List.of());
+            controles.add(new ControleResultat(regle[0], regle[1], regle[2], anomalies.isEmpty(), anomalies));
+        }
+
         return new FecControleRapport(NB_CONTROLES, passes, bloquants.size(),
                 avertissements.size(), coherencePasses, exportPossible,
-                bloquants, avertissements, coherence);
+                bloquants, avertissements, coherence, controles);
     }
 
     private Anomalie anomalie(Set<String> codes, String code, String message, Integer ligne, EcritureComptable e) {
