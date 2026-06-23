@@ -1,0 +1,56 @@
+.fec-export {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 1100px;
+
+  &__head {
+    h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      color: #1a1a2e;
+    }
+
+    p {
+      margin: 0.3rem 0 0;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+  }
+
+  &__loading,
+  &__hint {
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+
+  &__error {
+    color: #b91c1c;
+    font-size: 0.9rem;
+  }
+
+  &__select {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+    max-width: 480px;
+
+    select {
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 0.5rem 0.6rem;
+      font: inherit;
+      color: #1a1a2e;
+    }
+  }
+
+  &__panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+}

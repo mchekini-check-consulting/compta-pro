@@ -55,6 +55,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/cabinet/reception/reception').then(m => m.Reception)
       },
       {
+        path: 'fec',
+        loadComponent: () => import('./pages/cabinet/fec/fec-export').then(m => m.FecExport)
+      },
+      {
         path: 'ged',
         loadComponent: () => import('./pages/cabinet/ged/ged').then(m => m.Ged)
       },

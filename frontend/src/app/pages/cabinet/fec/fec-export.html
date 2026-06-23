@@ -1,0 +1,30 @@
+<div class="fec-export">
+  <header class="fec-export__head">
+    <h1>Exporter le FEC</h1>
+    <p>Selectionnez un dossier et un exercice pour preparer le Fichier des Ecritures Comptables.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="fec-export__loading">Chargement des dossiers...</p>
+  } @else if (error()) {
+    <p class="fec-export__error">{{ error() }}</p>
+  } @else {
+    <label class="fec-export__select">
+      Dossier
+      <select (change)="selectionnerDossier(+$any($event.target).value)">
+        <option [value]="0" [selected]="!dossierSelectionne()">— Choisir un dossier —</option>
+        @for (d of dossiers(); track d.id) {
+          <option [value]="d.id">{{ d.raisonSociale }} (SIREN {{ d.siren }})</option>
+        }
+      </select>
+    </label>
+
+    @if (dossierSelectionne(); as dossier) {
+      <section class="fec-export__panel">
+        <app-fec [client]="dossier" />
+      </section>
+    } @else {
+      <p class="fec-export__hint">Choisissez un dossier pour afficher ses exercices.</p>
+    }
+  }
+</div>

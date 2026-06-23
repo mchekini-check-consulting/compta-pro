@@ -83,6 +83,12 @@ export class Sidebar {
           icon: 'invoice',
           route: '/cabinet/reception',
           accent: 'blue'
+        },
+        {
+          label: 'Exporter le FEC',
+          icon: 'invoice',
+          route: '/cabinet/fec',
+          accent: 'blue'
         }
       ]
     },

@@ -105,8 +105,9 @@
           <div><span>Comptes distincts</span><strong>{{ s.nbComptesDistincts }}</strong></div>
           <div><span>Total Debit</span><strong>{{ s.totalDebit | number: '1.2-2' }} €</strong></div>
           <div><span>Total Credit</span><strong>{{ s.totalCredit | number: '1.2-2' }} €</strong></div>
-          <div [class.fec__ecart--ko]="!s.equilibre">
-            <span>Ecart</span><strong>{{ s.ecart | number: '1.2-2' }} €</strong>
+          <div [class.fec__ecart--ko]="!s.equilibre" [class.fec__ecart--ok]="s.equilibre">
+            <span>Equilibre</span>
+            <strong>{{ s.equilibre ? '✓ Equilibre' : '⚠ Ecart ' + (s.ecart | number: '1.2-2') + ' €' }}</strong>
           </div>
         </section>
 
